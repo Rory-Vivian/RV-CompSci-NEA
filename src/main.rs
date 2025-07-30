@@ -1,6 +1,5 @@
 //External libraries
 use macroquad::prelude::*;
-use macroquad::telemetry::sample_gpu_queries;
 
 //Internal Modules
 mod objects;
