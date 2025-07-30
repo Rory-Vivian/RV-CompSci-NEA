@@ -20,6 +20,7 @@ pub (crate) struct Object<T> where T: Render {
     pub(crate) dx: f32,
     dy: f32,
 }
+
 #[allow(dead_code)]
 impl<T: Render> Object<T>{
     pub(crate) fn new(shape: T, material: Material) -> Object<T> {
