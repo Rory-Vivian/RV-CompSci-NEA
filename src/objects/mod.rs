@@ -3,7 +3,7 @@ use macroquad::math::Vec2;
 
 pub(crate) mod shapes;
 pub(crate) mod physics;
-use physics::{Material};
+use physics::{Material, PhysicsType};
 
 #[allow(dead_code)]
 pub(crate) trait Render {
@@ -18,25 +18,28 @@ pub (crate) struct Object<T> where T: Render {
     pub(crate) shape: T,
     material: Material,
     pub(crate) dx: f32,
-    dy: f32,
+    pub(crate) dy: f32,
+    phys_type: PhysicsType
 }
 
 #[allow(dead_code)]
 impl<T: Render> Object<T>{
-    pub(crate) fn new(shape: T, material: Material) -> Object<T> {
+    pub(crate) fn new(shape: T, material: Material, phys_type: PhysicsType) -> Object<T> {
         Object {
             shape,
             material,
             dx: 0.0,
             dy: 0.0,
+            phys_type,
         }
     }
-    pub(crate) fn create(shape: T, mass: f32) -> Object<T> {
+    pub(crate) fn create(shape: T, mass: f32, phys_type: PhysicsType) -> Object<T> {
         Object {
             material: Material::new(mass, shape.get_area()),
             shape,
             dx: 0.0,
             dy: 0.0,
+            phys_type,
         }
     }
 

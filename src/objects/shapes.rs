@@ -23,11 +23,11 @@ pub struct Circle {
 }
 
 impl Square {
-    pub(crate) fn new(pos: Vec2, size: f32, color: Color) -> Square {
+    pub(crate) fn new(pos: Vec2, size: f32, colour: Color) -> Square {
         Square {
             pos,
             size,
-            colour: color,
+            colour,
         }
     }
 }
