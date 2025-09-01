@@ -19,7 +19,7 @@ async fn main() {
     let mut metal_square = Object::create(square, 8.5, PhysicsType::Static);
     let mut wooden_square = Object::create(rect, 8.5, PhysicsType::Static);
 
-
+    ball.dy = -20.0;
     loop {
         //Clear the background and make the screen black
         clear_background(BLACK);

@@ -67,6 +67,9 @@ impl Render for Square {
     fn clone(&mut self) -> Box<dyn Render> {
         Box::new(Square::new(self.pos.clone(), self.size, self.colour))
     }
+    fn get_drag_coefficient(&self) -> f32 {
+        1.05
+    }
 }
 impl Render for Rectangle {
     fn render(&self) {
@@ -82,6 +85,9 @@ impl Render for Rectangle {
     fn clone(&mut self) -> Box<dyn Render> {
         Box::new(Rectangle::new(self.pos.clone(), self.width, self.length, self.colour))
     }
+    fn get_drag_coefficient(&self) -> f32 {
+        1.05
+    }
 }
 impl Render for Circle {
     fn render(&self) {
@@ -95,5 +101,8 @@ impl Render for Circle {
     }
     fn clone(&mut self) -> Box<dyn Render> {
         Box::new(Circle::new(self.pos.clone(), self.radius, self.colour))
+    }
+    fn get_drag_coefficient(&self) -> f32 {
+        0.47
     }
 }

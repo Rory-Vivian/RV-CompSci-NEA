@@ -11,6 +11,7 @@ pub(crate) trait Render {
     fn get_area(&self) -> f32;
     fn get_pos(&mut self) -> &mut Vec2;
     fn clone(&mut self) -> Box<dyn Render>;
+    fn get_drag_coefficient(&self) -> f32;
 }
 
 #[allow(dead_code)]
@@ -43,9 +44,23 @@ impl<T: Render> Object<T>{
         }
     }
 
-    pub fn physics_process(&mut self) {
+    fn movement_process(&mut self) {
         self.shape.get_pos().x += self.dx;
         self.shape.get_pos().y += self.dy;
+    }
+
+    pub fn physics_process(&mut self) {
+        match self.phys_type {
+            PhysicsType::Static => {
+            }
+            PhysicsType::Dynamic => {
+                self.dy += 1.0;
+                self.movement_process();
+            }
+            PhysicsType::Kinematic => {
+                self.movement_process();
+            }
+        };
     }
 }
 
