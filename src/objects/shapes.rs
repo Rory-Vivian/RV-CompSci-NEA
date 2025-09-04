@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 use macroquad::color::Color;
 use crate::objects::*;
 use std::f32::consts::*;
+use crate::measurements::METER;
 
 pub struct Square {
     pos: Vec2,
@@ -58,7 +59,7 @@ impl Render for Square {
         draw_rectangle(self.pos.x, self.pos.y, self.size, self.size, self.colour);
     }
     fn get_area(&self) -> f32 {
-        self.size * self.size
+        self.size/METER * self.size/METER
     }
     fn get_pos(&mut self) -> &mut Vec2 {
         &mut self.pos
@@ -76,7 +77,7 @@ impl Render for Rectangle {
         draw_rectangle(self.pos.x, self.pos.y, self.width, self.length, self.colour);
     }
     fn get_area(&self) -> f32 {
-        self.width * self.length
+        self.width/METER * self.length/METER
     }
     fn get_pos(&mut self) -> &mut Vec2 {
         &mut self.pos
@@ -94,7 +95,7 @@ impl Render for Circle {
         draw_circle(self.pos.x, self.pos.y, self.radius, self.colour);
     }
     fn get_area(&self) -> f32 {
-        PI * (self.radius * self.radius) * self.radius * self.radius
+        PI * ((self.radius/METER) * (self.radius/METER)) * (self.radius/METER) * (self.radius/METER)
     }
     fn get_pos(&mut self) -> &mut Vec2 {
         &mut self.pos

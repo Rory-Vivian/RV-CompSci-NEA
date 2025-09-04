@@ -1,4 +1,5 @@
 use macroquad::math::Vec2;
+use crate::measurements::{dt, get_gravity};
 use crate::objects::{Object, Render};
 
 pub(crate) enum PhysicsType {
@@ -36,8 +37,10 @@ impl<T: Render> PhysicsObeject for Object<T> {
             PhysicsType::Static => {
             }
             PhysicsType::Dynamic => {
-                self.dy += 1.0;
+                self.dy += get_gravity();
                 self.movement_process();
+                if self.dx > 0.0 { self.dx -= self.get_drag().x * dt()}
+                self.dy += self.get_drag().y/1000.0 * dt();
             }
             PhysicsType::Kinematic => {
                 self.movement_process();
@@ -48,7 +51,10 @@ impl<T: Render> PhysicsObeject for Object<T> {
     fn get_drag(&self) -> Vec2 {
         let drag_x = 0.5 * 1.29 * (self.dx * self.dx) * self.shape.get_area() * 1.05;
         let drag_y = 0.5 * 1.29 * (self.dy * self.dy) * self.shape.get_area() * 1.05;
-        Vec2::new(drag_x,drag_y)
+
+        let dc_x = drag_x / self.material.mass;
+        let dc_y = drag_y / self.material.mass;
+        Vec2::new(dc_x,dc_y)
     }
     fn get_terminal_velocity(&self) -> f32 {
         f32::sqrt((2.0 * self.material.mass * 1.0) * (1.29 * self.shape.get_area() * 1.05))

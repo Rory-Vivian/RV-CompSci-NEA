@@ -4,6 +4,7 @@ use macroquad::math::Vec2;
 pub(crate) mod shapes;
 pub(crate) mod physics;
 use physics::{Material, PhysicsType};
+use crate::measurements::{dt};
 
 #[allow(dead_code)]
 pub(crate) trait Render {
@@ -45,8 +46,8 @@ impl<T: Render> Object<T>{
     }
 
     fn movement_process(&mut self) {
-        self.shape.get_pos().y += self.dy;
-        self.shape.get_pos().x += self.dx;
+        self.shape.get_pos().y += self.dy * dt();
+        self.shape.get_pos().x += self.dx * dt();
     }
 }
 
