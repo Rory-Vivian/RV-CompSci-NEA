@@ -1,7 +1,7 @@
 use std::ptr::dangling;
 use macroquad::time::get_frame_time;
 
-pub static METER: f32 = 20.0;
+pub static METER: f32 = 100.0;
 pub(crate) fn dt() -> f32 {
     get_frame_time()
 }

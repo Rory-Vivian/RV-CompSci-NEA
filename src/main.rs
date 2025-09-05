@@ -13,9 +13,9 @@ use crate::objects::physics::{PhysicsObeject, PhysicsType};
 #[macroquad::main("Rory Vivian Computer Science NEA")]
 async fn main() {
     //Infinite loop
-    let square = Square::new(Vec2::new(0.0,0.0), meter(5.0), BLUE);
-    let rect = Rectangle::new(Vec2::new(meter(20.0), meter(20.0)), meter(1.0), meter(2.5), PURPLE);
-    let circ = Circle::new(Vec2::new(meter(10.0), meter(10.0)), meter(1.0), ORANGE);
+    let square = Square::new(Vec2::new(0.0,0.0), meter(1.0), BLUE);
+    let rect = Rectangle::new(Vec2::new(meter(4.0), meter(4.0)), meter(1.0), meter(2.5), PURPLE);
+    let circ = Circle::new(Vec2::new(meter(1.0), meter(1.0)), meter(0.1), ORANGE);
 
     let mut ball = Object::create(circ, 8.5, PhysicsType::Dynamic);
     let mut metal_square = Object::create(square, 8.5, PhysicsType::Static);

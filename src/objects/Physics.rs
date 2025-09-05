@@ -38,9 +38,11 @@ impl<T: Render> PhysicsObeject for Object<T> {
             }
             PhysicsType::Dynamic => {
                 self.dy += get_gravity();
+                if self.dx > 0.0 { self.dx -= self.get_drag().x * dt()} 
+                else if self.dx < 0.0 { self.dx += self.get_drag().x * dt()}
+                if self.dy > 0.0 { self.dy -= self.get_drag().y * dt()}
+                else if self.dy < 0.0 { self.dy += self.get_drag().x * dt()}
                 self.movement_process();
-                if self.dx > 0.0 { self.dx -= self.get_drag().x * dt()}
-                self.dy += self.get_drag().y/1000.0 * dt();
             }
             PhysicsType::Kinematic => {
                 self.movement_process();
