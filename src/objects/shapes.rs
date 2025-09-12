@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 use macroquad::color::Color;
 use crate::objects::*;
 use std::f32::consts::*;
-use crate::measurements::METER;
+use crate::measurements::{meter};
 
 pub struct Square {
     pos: Vec2,
@@ -56,10 +56,10 @@ impl Circle {
 //Implement render for all shapes
 impl Render for Square {
     fn render(&self) {
-        draw_rectangle(self.pos.x, self.pos.y, self.size, self.size, self.colour);
+        draw_rectangle(meter(self.pos.x), meter(self.pos.y), meter(self.size), meter(self.size), self.colour);
     }
     fn get_area(&self) -> f32 {
-        self.size/METER * self.size/METER
+        self.size * self.size
     }
     fn get_pos(&mut self) -> &mut Vec2 {
         &mut self.pos
@@ -74,10 +74,10 @@ impl Render for Square {
 }
 impl Render for Rectangle {
     fn render(&self) {
-        draw_rectangle(self.pos.x, self.pos.y, self.width, self.length, self.colour);
+        draw_rectangle(meter(self.pos.x), meter(self.pos.y), meter(self.width), meter(self.length), self.colour);
     }
     fn get_area(&self) -> f32 {
-        self.width/METER * self.length/METER
+        self.width * self.length
     }
     fn get_pos(&mut self) -> &mut Vec2 {
         &mut self.pos
@@ -92,10 +92,10 @@ impl Render for Rectangle {
 }
 impl Render for Circle {
     fn render(&self) {
-        draw_circle(self.pos.x, self.pos.y, self.radius, self.colour);
+        draw_circle(meter(self.pos.x), meter(self.pos.y), meter(self.radius), self.colour);
     }
     fn get_area(&self) -> f32 {
-        PI * ((self.radius/METER) * (self.radius/METER)) * (self.radius/METER) * (self.radius/METER)
+        PI * ((self.radius) * (self.radius)) * (self.radius) * (self.radius)
     }
     fn get_pos(&mut self) -> &mut Vec2 {
         &mut self.pos

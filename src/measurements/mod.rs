@@ -1,20 +1,18 @@
 use std::ptr::dangling;
+use std::sync::atomic::Ordering;
 use macroquad::time::get_frame_time;
+use crate::ZOOM;
 
-pub static METER: f32 = 100.0;
 pub(crate) fn dt() -> f32 {
     get_frame_time()
 }
 
 pub fn get_gravity() -> f32 {
-    mps(9.81)
-}
-
-pub fn mps(meters: f32) -> f32 {
-    meter(meters) * dt()
+    9.81*dt()
 }
 
 
 pub fn meter(meters: f32) -> f32 {
-    meters * METER
+    let zoom = ZOOM.load(Ordering::SeqCst) as f32;
+    meters * 100.0 * ((zoom / 100.) + (50./100.))
 }
