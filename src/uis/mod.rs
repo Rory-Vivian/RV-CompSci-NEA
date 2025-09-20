@@ -2,7 +2,10 @@ use macroquad::hash;
 use macroquad::prelude::*;
 use macroquad::ui::{root_ui, Skin};
 
-fn build_hot_bar() {
+pub(crate) mod uis_camera;
+
+pub(crate) fn build_hot_bar() -> bool {
+    let mut self_return = false;
     let bar_style = root_ui().style_builder()
         .color(Color::from_rgba(36,36,36,255))
         .color_inactive(Color::from_rgba(36,36,36,255))
@@ -31,8 +34,13 @@ fn build_hot_bar() {
         ui.button(None, "Ball");
         ui.same_line(0.0);
         ui.button(None, "Square");
+        ui.same_line(0.0);
+        if ui.button(None, "esc") {
+            self_return = true;
+        }
     });
     root_ui().pop_skin();
+    self_return
 }
 
 fn build_zoom_bar(zoom: &mut f32) {
@@ -57,7 +65,7 @@ fn build_zoom_bar(zoom: &mut f32) {
     let bar_size = vec2(500.0, 40.0);
     let bar_pos = vec2(
         0.0, // center horizontally
-        screen_height(), // 10px from bottom
+        screen_height() - bar_size.y, // 10px from bottom
     );
 
     // Push skin for the duration of this UI block
@@ -69,6 +77,5 @@ fn build_zoom_bar(zoom: &mut f32) {
 }
 
 pub fn build_ui(zoom: &mut f32) {
-    build_hot_bar();
     build_zoom_bar(zoom);
 }

@@ -1,6 +1,5 @@
-use std::sync::atomic::{AtomicU32, Ordering};
+use macroquad::miniquad::window::{request_quit};
 //External libraries
-use crate::uis::build_ui;
 use macroquad::prelude::*;
 
 //Internal Modules
@@ -10,42 +9,45 @@ mod uis;
 
 use objects::*;
 use measurements::*;
-use crate::objects::shapes::{Rectangle, Square, Circle};
+use crate::objects::shapes::{Rectangle, Circle};
 use crate::objects::physics::{PhysicsObeject, PhysicsType};
+use uis::{build_hot_bar};
+use crate::uis::build_ui;
 
-static ZOOM: AtomicU32 = AtomicU32::new(100);
+fn conf() -> Conf {
+    Conf {
+        window_title: "Rory Vivian Computer Science NEA".parse().unwrap(),
+        fullscreen: true,
+        ..Default::default()
+    }
+}
 
 //Main function called by macroquad as to allow the program to render.
-#[macroquad::main("Rory Vivian Computer Science NEA")]
+#[macroquad::main(conf)]
 async fn main() {
+    let mut active = true;
     //Infinite loop
     let circ = Circle::new(Vec2::new(1.0, 1.0), 0.1, ORANGE);
-    let sqr = Rectangle::new(Vec2::new(1.0, 1.0), 1.0, 1.0, WHITE);
+    let sqr = Rectangle::new(Vec2::new(0.0, 0.0), 1.0, 1.0, WHITE);
 
     let mut ball = Object::create(circ, 3.85, PhysicsType::Dynamic);
     let mut rect = Object::create(sqr, 3.85, PhysicsType::Static);
 
-    //ball.dy = -10.0;
-    //ball.dx = 1.0;
+    let mut camera = Camera2D{
+        zoom: Vec2::new(0.05,0.05),
+        ..Default::default()
+    };
+    set_camera(&camera);
+    let mut zoom: f32 = 100.;
+    camera.target = Vec2::new(0.,0.);
+    let mut mouse_before = Vec2::from(mouse_position());
 
     loop {
-        //Clear the background and make the screen black
         clear_background(Color::from_rgba(30,30,30,255));
-
-        //creat a list of rendered object
 
         if is_key_down(KeyCode::Up) {ball.dy -= 15.0*dt()}
         if is_key_down(KeyCode::Right) {ball.dx += 3.0*dt()}
         if is_key_down(KeyCode::Left) {ball.dx -= 3.0*dt()}
-        
-        let scrolling = mouse_wheel();
-        if scrolling.1 != 0.0 {
-            if scrolling.1 > 0.0 {
-                ZOOM.fetch_add(1, Ordering::Relaxed);
-            }else {
-                ZOOM.fetch_sub(1, Ordering::Relaxed);
-            }
-        }
 
         ball.physics_process();
 
@@ -56,10 +58,37 @@ async fn main() {
 
         render_objects(&render);
 
-        let mut zoom: f32 = ZOOM.load(Ordering::SeqCst) as f32;
         build_ui(&mut zoom);
-        ZOOM.store(zoom as u32, Ordering::SeqCst);
+        if build_hot_bar() {
+            active = false;
+        }
+        // change the level of the cameras zoom
+        camera.zoom = Vec2::new(zoom/(10.0 * screen_width()), zoom/(10.0 * screen_height()));
+        let scroll = mouse_wheel();
+        if scroll.1 != 0. {
+            let mouse_before = camera.screen_to_world(Vec2::from(mouse_position()));
+            zoom += scroll.1/100.;
+            camera.target = Vec2::from(mouse_position());
+            camera.zoom = Vec2::new(zoom/(10.0 * screen_width()), zoom/(10.0 * screen_height()));
+            let mouse_after = camera.screen_to_world(Vec2::from(mouse_position()));
+            let offset = mouse_after - mouse_before;
+            camera.target -= offset;
+        }
 
+        if is_mouse_button_down(MouseButton::Left) && is_key_down(KeyCode::Space) {
+            let mouse_after = camera.screen_to_world(Vec2::from(mouse_position()));
+            let offset = camera.screen_to_world(mouse_after) - camera.screen_to_world(mouse_before);
+            camera.target -= offset;
+        }
+
+
+        if !active {
+            request_quit();
+        }
+
+        // set camera and produce the next frame
+        mouse_before = Vec2::from(mouse_position());
+        set_camera(&camera);
         next_frame().await;
     };
 }
