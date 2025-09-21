@@ -40,7 +40,7 @@ async fn main() {
     set_camera(&camera);
     let mut zoom: f32 = 100.;
     camera.target = Vec2::new(0.,0.);
-    let mut mouse_before = Vec2::from(mouse_position());
+    let mut world_mouse_before: Option<Vec2> = None;
 
     loop {
         clear_background(Color::from_rgba(30,30,30,255));
@@ -76,9 +76,14 @@ async fn main() {
         }
 
         if is_mouse_button_down(MouseButton::Left) && is_key_down(KeyCode::Space) {
-            let mouse_after = camera.screen_to_world(Vec2::from(mouse_position()));
-            let offset = camera.screen_to_world(mouse_after) - camera.screen_to_world(mouse_before);
-            camera.target -= offset;
+            let world_mouse_after = camera.screen_to_world(Vec2::from(mouse_position()));
+            if let Some(last_pos) = world_mouse_before {
+                let offset = world_mouse_after - last_pos;
+                camera.target -= offset;
+            }
+            world_mouse_before = Some(world_mouse_after);
+        }else {
+            world_mouse_before = None;
         }
 
 
@@ -87,7 +92,6 @@ async fn main() {
         }
 
         // set camera and produce the next frame
-        mouse_before = Vec2::from(mouse_position());
         set_camera(&camera);
         next_frame().await;
     };
