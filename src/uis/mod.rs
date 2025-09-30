@@ -1,18 +1,20 @@
 use macroquad::hash;
 use macroquad::prelude::*;
-use macroquad::ui::{root_ui, Skin};
+use macroquad::ui::{Skin, root_ui};
 
-pub(crate) mod uis_camera;
+mod guidlines;
 
-pub(crate) fn build_hot_bar() -> bool {
+pub(crate) fn build_hot_bar(simulate: &mut bool) -> bool {
     let mut self_return = false;
-    let bar_style = root_ui().style_builder()
-        .color(Color::from_rgba(36,36,36,255))
-        .color_inactive(Color::from_rgba(36,36,36,255))
+    let bar_style = root_ui()
+        .style_builder()
+        .color(Color::from_rgba(36, 36, 36, 255))
+        .color_inactive(Color::from_rgba(36, 36, 36, 255))
         .text_color(WHITE)
         .build();
 
-    let button_bar = root_ui().style_builder()
+    let button_bar = root_ui()
+        .style_builder()
         .background_margin(RectOffset::new(0.0, 16.0, 0.0, 16.0))
         .margin(RectOffset::new(16.0, 0.0, 16.0, -16.0))
         .color(Color::from_rgba(42, 42, 42, 255))
@@ -30,15 +32,30 @@ pub(crate) fn build_hot_bar() -> bool {
         ..root_ui().default_skin()
     };
     root_ui().push_skin(&bar_skin);
-    root_ui().window(hash!(), Vec2::new(0., 0.), Vec2::new(screen_width(), 40.), |ui| {
-        ui.button(None, "Ball");
-        ui.same_line(0.0);
-        ui.button(None, "Square");
-        ui.same_line(0.0);
-        if ui.button(None, "esc") {
-            self_return = true;
-        }
-    });
+    root_ui().window(
+        hash!(),
+        Vec2::new(0., 0.),
+        Vec2::new(screen_width(), 40.),
+        |ui| {
+            ui.button(None, "Ball");
+            ui.same_line(0.0);
+            ui.button(None, "Square");
+            ui.same_line(0.0);
+            if *simulate {
+                if ui.button(None, "pause") {
+                    *simulate = false;
+                }
+            } else {
+                if ui.button(None, "play") {
+                    *simulate = true;
+                }
+            }
+            ui.same_line(0.0);
+            if ui.button(None, "esc") {
+                self_return = true;
+            }
+        },
+    );
     root_ui().pop_skin();
     self_return
 }
@@ -50,10 +67,7 @@ fn build_zoom_bar(zoom: &mut f32) {
         .color(Color::from_rgba(126, 29, 251, 0)) // semi-transparent
         .text_color(WHITE)
         .build();
-    let bar_style = root_ui()
-        .style_builder()
-        .text_color(WHITE)
-        .build();
+    let bar_style = root_ui().style_builder().text_color(WHITE).build();
 
     // Apply the style to the window; inherit the rest from the default skin
     let skin = Skin {
@@ -64,8 +78,8 @@ fn build_zoom_bar(zoom: &mut f32) {
 
     let bar_size = vec2(500.0, 40.0);
     let bar_pos = vec2(
-        0.0, // center horizontally
-        screen_height() - bar_size.y, // 10px from bottom
+        0.0,             // center horizontally
+        screen_height(), // 10px from bottom
     );
 
     // Push skin for the duration of this UI block
@@ -76,6 +90,7 @@ fn build_zoom_bar(zoom: &mut f32) {
     });
 }
 
-pub fn build_ui(zoom: &mut f32) {
+pub fn build_ui(zoom: &mut f32, camera: &Camera2D) {
     build_zoom_bar(zoom);
+    guidlines::draw_guidlines(camera);
 }
