@@ -32,7 +32,7 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
     let button_bar_active = root_ui()
         .style_builder()
         .background_margin(RectOffset::new(0.0, 16.0, 0.0, 16.0))
-        .margin(RectOffset::new(16.0, 0.0, 16.0, 0.0))
+        .margin(RectOffset::new(16.0, 0.0, 16.0, -16.0))
         .color(PURPLE)
         .color_inactive(PURPLE)
         .color_hovered(Color::from_rgba(143, 2, 244, 255))

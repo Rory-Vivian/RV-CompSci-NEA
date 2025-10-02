@@ -10,7 +10,7 @@ mod uis;
 
 use crate::create_objects::draw_process;
 use crate::objects::physics::{PhysicsObeject, PhysicsType};
-use crate::objects::shapes::{Circle, Rectangle};
+use crate::objects::shapes::{Circle, Rectangle, Square};
 use crate::uis::build_ui;
 //use measurements::*;
 use objects::*;
@@ -30,18 +30,30 @@ fn conf() -> Conf {
     }
 }
 
-pub fn cam_to_world(input: Vec2, camera: Camera2D) -> Vec2 {
+pub fn cam_to_world(input: Vec2, camera: &Camera2D) -> Vec2 {
     //zoom coeficient
     let co_x = camera.zoom.x * (screen_width() * 10.);
     let co_y = camera.zoom.y * (screen_height() * 10.);
-    
+
     //create the return
-    let mut output = Vec2::new(0.,0.);
-    output.x = input.x/co_x;
-    output.y = input.y/co_y;
-    
+    let mut output = Vec2::new(0., 0.);
+    output.x = input.x / co_x;
+    output.y = input.y / co_y;
+
     //retrun the new vector
     output
+}
+
+#[allow(dead_code)]
+fn draw_circle_around_mouse(camera: &Camera2D) {
+    let pos = Vec2::from(mouse_position());
+    let pos2 = camera.screen_to_world(pos);
+    // let pos1 = cam_to_world(pos, &camera);
+    // draw_circle(pos1.x, pos1.y, 1.0, RED);
+    // draw_circle(mouse_position().0, mouse_position().1, 1.0, RED);
+    // draw_circle(mouse_position().0, mouse_position().1, 1.0, BLUE);
+    // draw_circle(pos.x, pos.y, 1.0, YELLOW);
+    draw_circle(pos2.x, pos2.y, 5.0, LIGHTGRAY);
 }
 
 //Main function called by macroquad as to allow the program to render.
@@ -72,6 +84,7 @@ async fn main() {
         clear_background(Color::from_rgba(30, 30, 30, 255));
         // set camera and produce the next frame
         set_camera(&camera);
+        draw_circle_around_mouse(&camera);
 
         if pauorpla {
             ball.physics_process();
@@ -141,9 +154,6 @@ async fn main() {
         if !active {
             request_quit();
         }
-
-        let world_mouse = camera.screen_to_world(Vec2::from(camera_pos()));
-        draw_circle_lines(world_mouse.x, world_mouse.y, 3., 1., RED);
 
         next_frame().await;
     }
