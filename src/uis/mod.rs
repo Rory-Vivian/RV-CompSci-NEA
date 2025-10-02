@@ -2,9 +2,12 @@ use macroquad::hash;
 use macroquad::prelude::*;
 use macroquad::ui::{Skin, root_ui};
 
+use crate::MouseMode;
+
 mod guidlines;
 
-pub(crate) fn build_hot_bar(simulate: &mut bool) -> bool {
+#[allow(unused_variables)]
+pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> bool {
     let mut self_return = false;
     let bar_style = root_ui()
         .style_builder()
@@ -26,11 +29,25 @@ pub(crate) fn build_hot_bar(simulate: &mut bool) -> bool {
         .text_color_clicked(WHITE)
         .build();
 
-    let bar_skin = Skin {
+    let button_bar_active = root_ui()
+        .style_builder()
+        .background_margin(RectOffset::new(0.0, 16.0, 0.0, 16.0))
+        .margin(RectOffset::new(16.0, 0.0, 16.0, 0.0))
+        .color(PURPLE)
+        .color_inactive(PURPLE)
+        .color_hovered(Color::from_rgba(143, 2, 244, 255))
+        .color_clicked(WHITE)
+        .text_color(WHITE)
+        .text_color_hovered(WHITE)
+        .text_color_clicked(WHITE)
+        .build();
+
+    let mut bar_skin = Skin {
         window_style: bar_style,
         button_style: button_bar,
         ..root_ui().default_skin()
     };
+
     root_ui().push_skin(&bar_skin);
     root_ui().window(
         hash!(),
@@ -39,7 +56,21 @@ pub(crate) fn build_hot_bar(simulate: &mut bool) -> bool {
         |ui| {
             ui.button(None, "Ball");
             ui.same_line(0.0);
-            ui.button(None, "Square");
+            match *mouse_mode {
+                MouseMode::DrawSquare => {
+                    bar_skin.button_style = button_bar_active;
+                    ui.push_skin(&bar_skin);
+                    if ui.button(None, "Square") {
+                        *mouse_mode = MouseMode::Drag;
+                    }
+                    ui.pop_skin();
+                }
+                _ => {
+                    if ui.button(None, "Square") {
+                        *mouse_mode = MouseMode::DrawSquare;
+                    }
+                }
+            }
             ui.same_line(0.0);
             if *simulate {
                 if ui.button(None, "pause") {

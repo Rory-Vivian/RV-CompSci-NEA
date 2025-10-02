@@ -3,6 +3,7 @@ use macroquad::math::Vec2;
 
 pub(crate) mod shapes;
 pub(crate) mod physics;
+pub(crate) mod create_objects;
 use physics::{Material, PhysicsType};
 use crate::measurements::{dt};
 
