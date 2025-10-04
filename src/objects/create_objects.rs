@@ -41,7 +41,19 @@ fn create_square(pos_1: Vec2, pos_2: Vec2) -> Object<Rectangle> {
     Object::new(square, material, PhysicsType::Static)
 }
 
-pub fn draw_process<T: Render>(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, camera: &Camera2D) -> Option<Object<T>> {
+pub fn draw_process_square(first_mouse_pos: &mut Option<Vec2>, camera: &Camera2D) -> Option<Object<Rectangle>> {
+    if draw_process(MouseMode::DrawSquare, first_mouse_pos, camera) {
+        if let Some(pos1) = *first_mouse_pos {
+            let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
+            let square = create_square(pos1, pos2);
+            *first_mouse_pos = None;
+            return Some(square);
+        }
+    }
+    None
+}
+
+pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, camera: &Camera2D) -> bool {
     match mouse_mode {
         MouseMode::DrawSquare => {
             if is_mouse_button_down(MouseButton::Left) {
@@ -54,13 +66,12 @@ pub fn draw_process<T: Render>(mouse_mode: MouseMode, first_mouse_pos: &mut Opti
                 }
             } else {
                 if let Some(pos1) = *first_mouse_pos {
-                    let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
-                    let square = create_square(pos1, pos2);
+                    return true;
                 }
                 *first_mouse_pos = None;
             }
         }
         _ => {}
     }
-    None
+    false
 }

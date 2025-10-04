@@ -16,7 +16,6 @@ pub(crate) trait Render {
     fn get_drag_coefficient(&self) -> f32;
 }
 
-#[allow(dead_code)]
 pub (crate) struct Object<T> where T: Render {
     pub(crate) shape: T,
     material: Material,
@@ -45,12 +44,12 @@ impl<T: Render> Object<T>{
             phys_type,
         }
     }
-
     fn movement_process(&mut self) {
         self.shape.get_pos().y += self.dy * dt();
         self.shape.get_pos().x += self.dx * dt();
     }
 }
+
 
 pub fn render_objects(objects: &Vec<Box<dyn Render>>) {
     for object in objects {

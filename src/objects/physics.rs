@@ -19,6 +19,7 @@ pub(crate) trait PhysicsObeject {
     fn get_drag(&self) -> Vec2;
     fn get_terminal_velocity(&self) -> f32;
     fn get_physics_type(&self) -> &PhysicsType;
+    fn get_render_shape(&mut self) -> Box<dyn Render>;
 }
 
 impl Material {
@@ -64,6 +65,10 @@ impl<T: Render> PhysicsObeject for Object<T> {
 
     fn get_physics_type(&self) -> &PhysicsType {
         &self.phys_type
+    }
+    
+    fn get_render_shape(&mut self) -> Box<dyn Render> {
+        self.shape.clone()
     }
 }
 

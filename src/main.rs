@@ -1,5 +1,4 @@
 use macroquad::miniquad::window::request_quit;
-use macroquad::prelude::scene::camera_pos;
 //External libraries
 use macroquad::prelude::*;
 
@@ -8,9 +7,9 @@ mod measurements;
 mod objects;
 mod uis;
 
-use crate::create_objects::draw_process;
+use crate::objects::create_objects::draw_process_square;
 use crate::objects::physics::{PhysicsObeject, PhysicsType};
-use crate::objects::shapes::{Circle, Rectangle, Square};
+use crate::objects::shapes::{Circle, Rectangle};
 use crate::uis::build_ui;
 //use measurements::*;
 use objects::*;
@@ -44,18 +43,6 @@ pub fn cam_to_world(input: Vec2, camera: &Camera2D) -> Vec2 {
     output
 }
 
-#[allow(dead_code)]
-fn draw_circle_around_mouse(camera: &Camera2D) {
-    let pos = Vec2::from(mouse_position());
-    let pos2 = camera.screen_to_world(pos);
-    // let pos1 = cam_to_world(pos, &camera);
-    // draw_circle(pos1.x, pos1.y, 1.0, RED);
-    // draw_circle(mouse_position().0, mouse_position().1, 1.0, RED);
-    // draw_circle(mouse_position().0, mouse_position().1, 1.0, BLUE);
-    // draw_circle(pos.x, pos.y, 1.0, YELLOW);
-    draw_circle(pos2.x, pos2.y, 5.0, LIGHTGRAY);
-}
-
 //Main function called by macroquad as to allow the program to render.
 #[macroquad::main(conf)]
 async fn main() {
@@ -79,21 +66,25 @@ async fn main() {
     // pause or play the program
     let mut pauorpla = false;
     let mut draw_mouse_storage: Option<Vec2> = None;
+    
+    let mut phys_object: Vec<Box<dyn PhysicsObeject>> = Vec::new();
 
     loop {
         clear_background(Color::from_rgba(30, 30, 30, 255));
         // set camera and produce the next frame
         set_camera(&camera);
-        draw_circle_around_mouse(&camera);
-
         if pauorpla {
             ball.physics_process();
         }
 
-        let mut render: Vec<Box<dyn Render>> = Vec::new();
+        let mut render: Vec<Box<dyn Render + 'static>> = Vec::new();
 
         render.push(rect.shape.clone());
         render.push(ball.shape.clone());
+        for i in &mut phys_object {
+            let x = i.get_render_shape();
+            render.push(x);
+        }
 
         render_objects(&render);
 
@@ -133,6 +124,7 @@ async fn main() {
             camera.target -= offset;
         }
 
+        let mut square: Option<Object<Rectangle>> = None;
         match mouse_mode {
             MouseMode::Drag => {
                 if is_mouse_button_down(MouseButton::Left) {
@@ -147,8 +139,12 @@ async fn main() {
                 }
             }
             MouseMode::DrawSquare => {
-                draw_process(mouse_mode.clone(), &mut draw_mouse_storage, &camera);
+                square = draw_process_square(&mut draw_mouse_storage, &camera);
             }
+        }
+        if let Some(sqr) = square {
+            println!("adding square!");
+            phys_object.push(Box::new(sqr));
         }
 
         if !active {
