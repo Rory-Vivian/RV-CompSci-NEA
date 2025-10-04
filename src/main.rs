@@ -7,7 +7,9 @@ mod measurements;
 mod objects;
 mod uis;
 
-use crate::objects::create_objects::draw_process_square;
+use crate::objects::create_objects::{
+    draw_porcess_ball, draw_porcess_rectangele, draw_process_square,
+};
 use crate::objects::physics::{PhysicsObeject, PhysicsType};
 use crate::objects::shapes::{Circle, Rectangle};
 use crate::uis::build_ui;
@@ -16,9 +18,12 @@ use objects::*;
 use uis::build_hot_bar;
 
 #[derive(Clone)]
+#[allow(unused)]
 enum MouseMode {
     Drag,
     DrawSquare,
+    DrawRectangele,
+    DrawBall,
 }
 
 fn conf() -> Conf {
@@ -66,7 +71,7 @@ async fn main() {
     // pause or play the program
     let mut pauorpla = false;
     let mut draw_mouse_storage: Option<Vec2> = None;
-    
+
     let mut phys_object: Vec<Box<dyn PhysicsObeject>> = Vec::new();
 
     loop {
@@ -86,9 +91,8 @@ async fn main() {
             render.push(x);
         }
 
-        render_objects(&render);
-
         build_ui(&mut zoom, &camera);
+
         if build_hot_bar(&mut pauorpla, &mut mouse_mode) {
             active = false;
         }
@@ -111,6 +115,7 @@ async fn main() {
                     zoom -= 1.
                 }
             }
+            zoom = zoom.clamp(10., 200.);
 
             camera.target = Vec2::from(mouse_position());
             camera.zoom = Vec2::new(
@@ -125,6 +130,11 @@ async fn main() {
         }
 
         let mut square: Option<Object<Rectangle>> = None;
+        let mut rect: Option<Object<Rectangle>> = None;
+        let mut ball: Option<Object<Circle>> = None;
+
+        render_objects(&render);
+
         match mouse_mode {
             MouseMode::Drag => {
                 if is_mouse_button_down(MouseButton::Left) {
@@ -141,10 +151,21 @@ async fn main() {
             MouseMode::DrawSquare => {
                 square = draw_process_square(&mut draw_mouse_storage, &camera);
             }
+            MouseMode::DrawRectangele => {
+                rect = draw_porcess_rectangele(&mut draw_mouse_storage, &camera);
+            }
+            MouseMode::DrawBall => {
+                ball = draw_porcess_ball(&mut draw_mouse_storage, &camera);
+            } //_ => {}
         }
         if let Some(sqr) = square {
-            println!("adding square!");
             phys_object.push(Box::new(sqr));
+        }
+        if let Some(rct) = rect {
+            phys_object.push(Box::new(rct));
+        }
+        if let Some(crl) = ball {
+            phys_object.push(Box::new(crl));
         }
 
         if !active {

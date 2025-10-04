@@ -1,10 +1,27 @@
 use macroquad::hash;
 use macroquad::prelude::*;
-use macroquad::ui::{Skin, root_ui};
+use macroquad::ui::{Ui, Skin, Style, root_ui};
 
 use crate::MouseMode;
 
 mod guidlines;
+
+fn active_button(ui: &mut Ui,is_active: bool, active: &Style, mut inactive: Skin, label: &'static str) -> bool {
+    let mut ret_val = false;
+    if is_active {
+        inactive.button_style = active.clone();
+        ui.push_skin(&inactive);
+        if ui.button(None, label) {
+            ret_val = true;
+        }
+        ui.pop_skin();
+    }else {
+        if ui.button(None, label) { 
+            ret_val = true;
+        }
+    }
+    ret_val
+}
 
 #[allow(unused_variables)]
 pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> bool {
@@ -42,7 +59,7 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
         .text_color_clicked(WHITE)
         .build();
 
-    let mut bar_skin = Skin {
+    let bar_skin = Skin {
         window_style: bar_style,
         button_style: button_bar,
         ..root_ui().default_skin()
@@ -54,22 +71,19 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
         Vec2::new(0., 0.),
         Vec2::new(screen_width(), 40.),
         |ui| {
-            ui.button(None, "Ball");
+            if active_button(ui, matches!(mouse_mode, MouseMode::DrawSquare), &button_bar_active, bar_skin.clone(), "Square") {
+                if matches!(mouse_mode, MouseMode::DrawSquare) { *mouse_mode = MouseMode::Drag; }
+                else { *mouse_mode = MouseMode::DrawSquare; }
+            }
             ui.same_line(0.0);
-            match *mouse_mode {
-                MouseMode::DrawSquare => {
-                    bar_skin.button_style = button_bar_active;
-                    ui.push_skin(&bar_skin);
-                    if ui.button(None, "Square") {
-                        *mouse_mode = MouseMode::Drag;
-                    }
-                    ui.pop_skin();
-                }
-                _ => {
-                    if ui.button(None, "Square") {
-                        *mouse_mode = MouseMode::DrawSquare;
-                    }
-                }
+            if active_button(ui, matches!(mouse_mode, MouseMode::DrawRectangele), &button_bar_active, bar_skin.clone(), "Rectangle") {
+                if matches!(mouse_mode, MouseMode::DrawRectangele) { *mouse_mode = MouseMode::Drag; }
+                else { *mouse_mode = MouseMode::DrawRectangele; }
+            }
+            ui.same_line(0.0);
+            if active_button(ui, matches!(mouse_mode, MouseMode::DrawBall), &button_bar_active, bar_skin.clone(), "Ball") {
+                if matches!(mouse_mode, MouseMode::DrawBall) { *mouse_mode = MouseMode::Drag; }
+                else { *mouse_mode = MouseMode::DrawBall; }
             }
             ui.same_line(0.0);
             if *simulate {
