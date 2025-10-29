@@ -3,8 +3,10 @@ use macroquad::prelude::*;
 use macroquad::ui::{Ui, Skin, Style, root_ui};
 
 use crate::MouseMode;
+use crate::objects::physics::PhysicsObeject;
 
 mod guidlines;
+mod sidebar;
 
 fn active_button(ui: &mut Ui,is_active: bool, active: &Style, mut inactive: Skin, label: &'static str) -> bool {
     let mut ret_val = false;
@@ -135,7 +137,10 @@ fn build_zoom_bar(zoom: &mut f32) {
     });
 }
 
-pub fn build_ui(zoom: &mut f32, camera: &Camera2D) {
+pub fn build_ui(zoom: &mut f32, camera: &Camera2D,ui_id: &mut String, selected_object: &mut Option<Box<dyn PhysicsObeject>>) {
     build_zoom_bar(zoom);
     guidlines::draw_guidlines(camera);
+    if let Some(selected_object) = selected_object {
+        sidebar::create_side_bar(ui_id, selected_object);
+    }
 }

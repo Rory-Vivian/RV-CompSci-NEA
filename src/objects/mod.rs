@@ -12,10 +12,11 @@ pub(crate) trait Render {
     fn render(&self);
     fn get_area(&self) -> f32;
     fn get_pos(&mut self) -> &mut Vec2;
-    fn clone(&mut self) -> Box<dyn Render>;
+    fn clone_box(&mut self) -> Box<dyn Render>;
     fn get_drag_coefficient(&self) -> f32;
 }
 
+#[derive(Clone)]
 pub (crate) struct Object<T> where T: Render {
     pub(crate) shape: T,
     material: Material,

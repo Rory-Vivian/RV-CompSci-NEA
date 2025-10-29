@@ -56,7 +56,7 @@ async fn main() {
     //Infinite loop
     let circ = Circle::new(Vec2::new(1.0, 1.0), 0.1, ORANGE);
     let sqr = Rectangle::new(Vec2::new(0.0, 0.0), 1.0, 1.0, WHITE);
-
+    
     let mut ball = Object::create(circ, 3.85, PhysicsType::Dynamic);
     let mut rect = Object::create(sqr, 3.85, PhysicsType::Static);
 
@@ -73,6 +73,8 @@ async fn main() {
     let mut draw_mouse_storage: Option<Vec2> = None;
 
     let mut phys_object: Vec<Box<dyn PhysicsObeject>> = Vec::new();
+    
+    let mut ui_id: String = String::from("");
 
     loop {
         clear_background(Color::from_rgba(30, 30, 30, 255));
@@ -84,14 +86,14 @@ async fn main() {
 
         let mut render: Vec<Box<dyn Render + 'static>> = Vec::new();
 
-        render.push(rect.shape.clone());
-        render.push(ball.shape.clone());
+        render.push(rect.shape.clone_box());
+        render.push(ball.shape.clone_box());
         for i in &mut phys_object {
             let x = i.get_render_shape();
             render.push(x);
         }
-
-        build_ui(&mut zoom, &camera);
+        
+        build_ui(&mut zoom, &camera, &mut ui_id, &mut Some(Box::new(rect.clone())));
 
         if build_hot_bar(&mut pauorpla, &mut mouse_mode) {
             active = false;
@@ -134,7 +136,7 @@ async fn main() {
         let mut ball: Option<Object<Circle>> = None;
 
         render_objects(&render);
-
+        
         match mouse_mode {
             MouseMode::Drag => {
                 if is_mouse_button_down(MouseButton::Left) {

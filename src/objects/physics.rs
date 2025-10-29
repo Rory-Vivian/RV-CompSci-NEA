@@ -2,23 +2,29 @@ use macroquad::math::Vec2;
 use crate::measurements::{dt, get_gravity};
 use crate::objects::{Object, Render};
 
+#[allow(unused)]
+#[derive(Clone)]
 pub(crate) enum PhysicsType {
     Static,
     Dynamic,
     Kinematic,
 }
 
+#[allow(dead_code)]
+#[derive(Clone)]
 pub struct Material {
     mass: f32,
     area: f32,
     density: f32,
 }
 
+#[allow(unused)]
 pub(crate) trait PhysicsObeject {
     fn physics_process(&mut self);
     fn get_drag(&self) -> Vec2;
     fn get_terminal_velocity(&self) -> f32;
-    fn get_physics_type(&self) -> &PhysicsType;
+    fn get_physics_type(&mut self) -> &mut PhysicsType;
+    fn set_physics_type(&mut self, new_type: PhysicsType);
     fn get_render_shape(&mut self) -> Box<dyn Render>;
 }
 
@@ -63,12 +69,15 @@ impl<T: Render> PhysicsObeject for Object<T> {
         f32::sqrt((2.0 * self.material.mass * 1.0) * (1.29 * self.shape.get_area() * 1.05))
     }
 
-    fn get_physics_type(&self) -> &PhysicsType {
-        &self.phys_type
+    fn get_physics_type(&mut self) -> &mut PhysicsType {
+        &mut self.phys_type
+    }
+    fn set_physics_type(&mut self, new_type: PhysicsType) {
+        self.phys_type = new_type;
     }
     
     fn get_render_shape(&mut self) -> Box<dyn Render> {
-        self.shape.clone()
+        self.shape.clone_box()
     }
 }
 
