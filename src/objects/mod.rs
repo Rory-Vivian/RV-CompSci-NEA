@@ -1,5 +1,8 @@
-use macroquad;
+use std::clone;
+
+use macroquad::{self, input::is_mouse_button_down};
 use macroquad::math::Vec2;
+use macroquad::color::Color;
 
 pub(crate) mod shapes;
 pub(crate) mod physics;
@@ -14,9 +17,12 @@ pub(crate) trait Render {
     fn get_pos(&mut self) -> &mut Vec2;
     fn clone_box(&mut self) -> Box<dyn Render>;
     fn get_drag_coefficient(&self) -> f32;
+    fn get_colour(&self) -> Color;
+    fn set_colour(&mut self, colour: Color);
+    fn mouse_in_area(&self, mouse_pos: Vec2) -> bool;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub (crate) struct Object<T> where T: Render {
     pub(crate) shape: T,
     material: Material,

@@ -137,10 +137,10 @@ fn build_zoom_bar(zoom: &mut f32) {
     });
 }
 
-pub fn build_ui(zoom: &mut f32, camera: &Camera2D,ui_id: &mut String, selected_object: &mut Option<Box<dyn PhysicsObeject>>) {
+pub fn build_ui(zoom: &mut f32, camera: &Camera2D,ui_id: &mut String, objects: &mut Vec<Box<dyn PhysicsObeject>>, selected_index: Option<usize>) {
     build_zoom_bar(zoom);
     guidlines::draw_guidlines(camera);
-    if let Some(selected_object) = selected_object {
-        sidebar::create_side_bar(ui_id, selected_object);
+    if let Some(selected_object_index) = selected_index {
+        sidebar::create_side_bar(ui_id, objects, selected_object_index);
     }
 }

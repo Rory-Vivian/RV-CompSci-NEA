@@ -1,14 +1,14 @@
-use macroquad::prelude::*;
-use macroquad::color::Color;
+use crate::measurements::{meter, vec2_meter};
 use crate::objects::*;
+use macroquad::color::Color;
+use macroquad::prelude::*;
 use std::f32::consts::*;
-use crate::measurements::{meter};
 
 #[derive(Clone)]
 pub struct Square {
     pos: Vec2,
     size: f32,
-    colour: Color
+    colour: Color,
 }
 
 #[derive(Clone)]
@@ -16,23 +16,19 @@ pub struct Rectangle {
     pos: Vec2,
     width: f32,
     length: f32,
-    colour: Color
+    colour: Color,
 }
 
 #[derive(Clone)]
 pub struct Circle {
     pos: Vec2,
     radius: f32,
-    colour: Color
+    colour: Color,
 }
 
 impl Square {
     pub(crate) fn new(pos: Vec2, size: f32, colour: Color) -> Square {
-        Square {
-            pos,
-            size,
-            colour,
-        }
+        Square { pos, size, colour }
     }
 }
 impl Rectangle {
@@ -53,20 +49,38 @@ impl Circle {
             colour,
         }
     }
-
 }
 
 //Implement render for all shapes
 impl Render for Square {
     fn render(&self) {
-        draw_rectangle(meter(self.pos.x), meter(self.pos.y), meter(self.size), meter(self.size), self.colour);
-        draw_rectangle_lines(meter(self.pos.x), meter(self.pos.y), meter(self.size), meter(self.size), 1., BLACK);
+        draw_rectangle(
+            meter(self.pos.x),
+            meter(self.pos.y),
+            meter(self.size),
+            meter(self.size),
+            self.colour,
+        );
+        draw_rectangle_lines(
+            meter(self.pos.x),
+            meter(self.pos.y),
+            meter(self.size),
+            meter(self.size),
+            1.,
+            BLACK,
+        );
     }
     fn get_area(&self) -> f32 {
         self.size * self.size
     }
     fn get_pos(&mut self) -> &mut Vec2 {
         &mut self.pos
+    }
+    fn get_colour(&self) -> Color {
+        self.colour.clone()
+    }
+    fn set_colour(&mut self, colour: Color) {
+        self.colour = colour;
     }
 
     fn clone_box(&mut self) -> Box<dyn Render> {
@@ -75,11 +89,33 @@ impl Render for Square {
     fn get_drag_coefficient(&self) -> f32 {
         1.05
     }
+    fn mouse_in_area(&self, mouse_pos: Vec2) -> bool {
+        if meter(self.pos.x) <= mouse_pos.x && (meter(self.pos.x) + meter(self.size)) >= mouse_pos.x {
+            if meter(self.pos.y) <= mouse_pos.y && (meter(self.pos.y) + meter(self.size)) >= mouse_pos.y {
+                return true
+            }
+        }
+        false
+    }
 }
+
 impl Render for Rectangle {
     fn render(&self) {
-        draw_rectangle(meter(self.pos.x), meter(self.pos.y), meter(self.width), meter(self.length), self.colour);
-        draw_rectangle_lines(meter(self.pos.x), meter(self.pos.y), meter(self.width), meter(self.length), 1., BLACK);
+        draw_rectangle(
+            meter(self.pos.x),
+            meter(self.pos.y),
+            meter(self.width),
+            meter(self.length),
+            self.colour,
+        );
+        draw_rectangle_lines(
+            meter(self.pos.x),
+            meter(self.pos.y),
+            meter(self.width),
+            meter(self.length),
+            1.,
+            BLACK,
+        );
     }
     fn get_area(&self) -> f32 {
         self.width * self.length
@@ -89,16 +125,48 @@ impl Render for Rectangle {
     }
 
     fn clone_box(&mut self) -> Box<dyn Render> {
-        Box::new(Rectangle::new(self.pos.clone(), self.width, self.length, self.colour))
+        Box::new(Rectangle::new(
+            self.pos.clone(),
+            self.width,
+            self.length,
+            self.colour,
+        ))
     }
     fn get_drag_coefficient(&self) -> f32 {
         1.05
     }
+    fn get_colour(&self) -> Color {
+        self.colour.clone()
+    }
+    fn set_colour(&mut self, colour: Color) {
+        self.colour = colour;
+    }
+    fn mouse_in_area(&self, mouse_pos: Vec2) -> bool {
+        if meter(self.pos.x) >= mouse_pos.x && (meter(self.pos.x) + meter(self.length)) <= mouse_pos.x {
+            if meter(self.pos.y) >= mouse_pos.y && (meter(self.pos.y) + meter(self.width)) <= mouse_pos.y {
+                return true
+            }
+        }
+        false
+    }
 }
 impl Render for Circle {
     fn render(&self) {
-        draw_poly(meter(self.pos.x), meter(self.pos.y), 30, meter(self.radius), 0. ,self.colour);
-        draw_circle_lines(meter(self.pos.x), meter(self.pos.y), meter(self.radius), 1., BLACK);
+        draw_poly(
+            meter(self.pos.x),
+            meter(self.pos.y),
+            30,
+            meter(self.radius),
+            0.,
+            self.colour,
+        );
+        draw_circle_lines(
+            meter(self.pos.x),
+            meter(self.pos.y),
+            meter(self.radius),
+            1.,
+            BLACK,
+        );
     }
     fn get_area(&self) -> f32 {
         PI * ((self.radius) * (self.radius)) * (self.radius) * (self.radius)
@@ -111,5 +179,19 @@ impl Render for Circle {
     }
     fn get_drag_coefficient(&self) -> f32 {
         0.47
+    }
+    fn get_colour(&self) -> Color {
+        self.colour.clone()
+    }
+    fn set_colour(&mut self, colour: Color) {
+        self.colour = colour;
+    }
+    fn mouse_in_area(&self, mouse_pos: Vec2) -> bool {
+        let distance = (vec2_meter(self.pos) - mouse_pos).length();
+        if distance <= self.radius {
+            true
+        } else {
+            false
+        }
     }
 }
