@@ -27,6 +27,7 @@ pub(crate) trait Render {
 pub (crate) struct Object<T> where T: Render {
     pub(crate) shape: T,
     material: Material,
+    gravity: f32,
     pub(crate) dx: f32,
     pub(crate) dy: f32,
     phys_type: PhysicsType,
@@ -41,6 +42,7 @@ impl<T: Render> Object<T>{
             material,
             dx: 0.0,
             dy: 0.0,
+            gravity: 9.81,
             phys_type,
             to_be_deleted: false,
         }
@@ -51,6 +53,7 @@ impl<T: Render> Object<T>{
             shape,
             dx: 0.0,
             dy: 0.0,
+            gravity: 9.81,
             phys_type,
             to_be_deleted: false,
         }

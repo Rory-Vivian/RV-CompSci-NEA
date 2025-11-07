@@ -54,6 +54,8 @@ impl Circle {
 //Implement render for all shapes
 impl Render for Square {
     fn render(&self) {
+        let mut outline = BLACK;
+        outline.a = self.colour.a;
         draw_rectangle(
             meter(self.pos.x),
             meter(self.pos.y),
@@ -67,7 +69,7 @@ impl Render for Square {
             meter(self.size),
             meter(self.size),
             1.,
-            BLACK,
+            outline,
         );
     }
     fn get_area(&self) -> f32 {
@@ -104,6 +106,8 @@ impl Render for Square {
 
 impl Render for Rectangle {
     fn render(&self) {
+        let mut outline = BLACK;
+        outline.a = self.colour.a;
         draw_rectangle(
             meter(self.pos.x),
             meter(self.pos.y),
@@ -117,7 +121,7 @@ impl Render for Rectangle {
             meter(self.width),
             meter(self.length),
             1.,
-            BLACK,
+            outline,
         );
     }
     fn get_area(&self) -> f32 {
@@ -161,6 +165,8 @@ impl Render for Rectangle {
 }
 impl Render for Circle {
     fn render(&self) {
+        let mut outline = BLACK;
+        outline.a = self.colour.a;
         draw_poly(
             meter(self.pos.x),
             meter(self.pos.y),
@@ -174,7 +180,7 @@ impl Render for Circle {
             meter(self.pos.y),
             meter(self.radius),
             1.,
-            BLACK,
+            outline,
         );
     }
     fn get_area(&self) -> f32 {

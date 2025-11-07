@@ -1,5 +1,5 @@
 use macroquad::camera::Camera2D;
-use crate::measurements::{dt, get_gravity};
+use crate::measurements::{dt};
 use crate::objects::{Object, Render};
 use macroquad::math::Vec2;
 
@@ -31,6 +31,9 @@ pub(crate) trait PhysicsObeject {
     fn get_material(&mut self) -> &mut Material;
     fn update_material(&mut self);
     fn get_to_be_deleted(&mut self) -> &mut bool;
+    fn get_gravity(&mut self) -> &mut f32;
+    fn get_velocity(&self) -> Vec2;
+    fn set_velocity(&mut self, velocity: Vec2);
 }
 
 impl Material {
@@ -48,7 +51,7 @@ impl<T: Render + Clone + 'static> PhysicsObeject for Object<T> {
         match self.get_physics_type() {
             PhysicsType::Static => {}
             PhysicsType::Dynamic => {
-                self.dy += get_gravity();
+                self.dy += self.gravity * dt();
                 if self.dx > 0.0 {
                     self.dx -= self.get_drag().x * dt()
                 } else if self.dx < 0.0 {
@@ -96,7 +99,12 @@ impl<T: Render + Clone + 'static> PhysicsObeject for Object<T> {
     fn update_material(&mut self) {
         self.material.area = self.shape.get_area();
         self.material.density = self.material.mass / self.material.area;
-        println!("Updated the material!")
     }
     fn get_to_be_deleted(&mut self) -> &mut bool { &mut self.to_be_deleted }
+    fn get_gravity(&mut self) -> &mut f32 { &mut self.gravity }
+    fn get_velocity(&self) -> Vec2 { Vec2::new(self.dx, self.dy) }
+    fn set_velocity(&mut self, velocity: Vec2) {
+        self.dx = velocity.x;
+        self.dy = velocity.y;
+    }
 }

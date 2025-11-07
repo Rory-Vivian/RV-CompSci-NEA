@@ -135,6 +135,34 @@ fn create_x_and_y_input(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObeject>>,
     }
 }
 
+fn create_velocity_inputs(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObeject>>, selected_index: usize,
+                          ui_id: &mut String, ui_text_save: &mut String) {
+    let mut vx_str: String = if ui_id == "text_input_velocity_x" { ui_text_save.clone() } else { objects.get_mut(selected_index).unwrap().get_velocity().x.to_string() };
+    let mut vy_str: String = if ui_id == "text_input_velocity_y" { ui_text_save.clone() } else { objects.get_mut(selected_index).unwrap().get_velocity().y.to_string() };
+    let vx_original = vx_str.clone();
+    let vy_original = vy_str.clone();
+
+    ui.label(None,"vx:");
+    ui.same_line(0.);
+    ui.editbox(hash!(), Vec2::new(100., 20.), &mut vx_str);
+    ui.same_line(0.);
+    ui.label(None,"vy:");
+    ui.same_line(0.);
+    ui.editbox(hash!(), Vec2::new(100., 20.), &mut vy_str);
+    if vx_str != vx_original {
+        *ui_id = "text_input_velocity_x".into();
+        *ui_text_save = vx_str.clone();
+    }
+    if vy_str != vy_original {
+        *ui_id = "text_input_velocity_y".into();
+        *ui_text_save = vy_str.clone();
+    }
+    if is_only_numbers(&vx_str) && is_only_numbers(&vy_str) && (vx_str != vx_original || vy_str != vy_original) {
+        let new_velocity = Vec2::new(vx_str.trim().parse::<f32>().unwrap(), vy_str.trim().parse::<f32>().unwrap());
+        objects.get_mut(selected_index).unwrap().set_velocity(new_velocity);
+    }
+}
+
 fn create_mass_material_inputs(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObeject>>, selected_index: usize,
                                 ui_id: &mut String, ui_text_save: &mut String) {
     // Declare variables for the user to edit
@@ -178,6 +206,28 @@ fn create_mass_material_inputs(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObe
             let new_mass = new_density * area;
             objects.get_mut(selected_index).unwrap().get_material().mass = new_mass;
             objects.get_mut(selected_index).unwrap().get_material().density = new_density;
+        }
+    }
+}
+
+fn build_gravity_inputs(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObeject>>, selected_index: usize,
+                        ui_id: &mut String, ui_text_save: &mut String) {
+    // Declare the variable for the user to edit
+    let mut gravity_str: String = if ui_id == "text_input_gravity" { ui_text_save.to_string() }
+    else {objects.get_mut(selected_index).unwrap().get_gravity().to_string()};
+    let gravity_original: String = gravity_str.clone();
+
+    // Create UI and inputs for gravity
+    ui.label(None, "Gravity:");
+    ui.same_line(0.);
+    ui.editbox(hash!(), Vec2::new(100., 20.), &mut gravity_str);
+
+    // Check if user has changed the value of gravity
+    if gravity_str != gravity_original {
+        *ui_id = "text_input_gravity".into();
+        *ui_text_save = gravity_str.clone();
+        if is_only_numbers(&gravity_str) {
+            *objects.get_mut(selected_index).unwrap().get_gravity() = gravity_str.trim().parse::<f32>().unwrap();
         }
     }
 }
@@ -250,6 +300,18 @@ fn create_shape_inputs(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObeject>>, 
         }
         _ => { panic!("Unsupported render shape"); }
     }
+}
+
+fn build_transparency_slider(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObeject>>, selected_index: usize) {
+    let mut colour = objects.get_mut(selected_index).unwrap().get_render_shape_referance().get_colour();
+    let mut data = colour.a * 100.;
+    ui.label(None, "Alpha:");
+    ui.same_line(0.);
+    ui.group(hash!(), Vec2::new(300.,30.), |ui| {
+        ui.slider(hash!(), "", 0.0..100., &mut data);
+    });
+    colour.a = data/100.;
+    objects.get_mut(selected_index).unwrap().get_render_shape_referance().set_colour(colour);
 }
 
 fn build_bin_button(ui: &mut Ui, _ui_id: &mut String, default_skin: &mut Skin, bin_button_style: Style, objects: &mut Vec<Box<dyn PhysicsObeject>>, selected_index: usize) {
@@ -336,14 +398,19 @@ pub(crate) fn create_side_bar(ui_id: &mut String, objects: &mut Vec<Box<dyn Phys
         Vec2::new(screen_width(), screen_height()),
         |ui| {
             create_x_and_y_input(ui, objects, selected_index, ui_id, ui_text_save);
+            create_velocity_inputs(ui, objects, selected_index, ui_id, ui_text_save);
             create_mass_material_inputs(ui, objects, selected_index, ui_id, ui_text_save);
+            build_gravity_inputs(ui, objects, selected_index, ui_id, ui_text_save);
             create_types_drop(ui, objects, selected_index, ui_id);
             create_shape_inputs(ui, objects, selected_index, ui_id, ui_text_save);
-            let colour_option = create_colour_buttons(ui, colour_button_style, &mut skin, ui_id);
+            let mut colour_option = create_colour_buttons(ui, colour_button_style, &mut skin, ui_id);
             if colour_option != Color::new(1., 1., 1., 255.) {
+                colour_option.a = objects.get_mut(selected_index).unwrap().get_render_shape_referance().get_colour().a;
                 objects.get_mut(selected_index).unwrap().get_render_shape_referance().set_colour(colour_option);
             }
+            build_transparency_slider(ui, objects, selected_index);
             build_bin_button(ui, ui_id, &mut skin, bin_button_style, objects, selected_index);
         },
     );
+    println!("{}", ui_id);
 }

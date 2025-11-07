@@ -161,7 +161,7 @@ async fn main() {
 
         match mouse_mode {
             MouseMode::Drag => {
-                if is_mouse_button_down(MouseButton::Left) {
+                if is_mouse_button_down(MouseButton::Left) && (selected_object_index.is_none() || mouse_position().0 < screen_width() - 400.) {
                     let world_mouse_after = Vec2::from(mouse_position());
                     if let Some(last_pos) = world_mouse_before {
                         let offset = world_mouse_after - last_pos;
