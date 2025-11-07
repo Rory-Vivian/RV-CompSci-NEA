@@ -1,7 +1,6 @@
+use macroquad::camera::Camera2D;
 use crate::measurements::{dt, get_gravity};
 use crate::objects::{Object, Render};
-use macroquad::color::{WHITE, PURPLE};
-use macroquad::input::mouse_position;
 use macroquad::math::Vec2;
 
 #[allow(unused)]
@@ -15,20 +14,23 @@ pub(crate) enum PhysicsType {
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub struct Material {
-    mass: f32,
-    area: f32,
-    density: f32,
+    pub(crate) mass: f32,
+    pub(crate) area: f32,
+    pub(crate) density: f32,
 }
 
 #[allow(unused)]
 pub(crate) trait PhysicsObeject {
-    fn physics_process(&mut self);
+    fn physics_process(&mut self, camera: &Camera2D);
     fn get_drag(&self) -> Vec2;
     fn get_terminal_velocity(&self) -> f32;
     fn get_physics_type(&mut self) -> &mut PhysicsType;
     fn set_physics_type(&mut self, new_type: PhysicsType);
     fn get_render_shape(&mut self) -> Box<dyn Render>;
     fn get_render_shape_referance(&mut self) -> Box<&mut dyn Render>;
+    fn get_material(&mut self) -> &mut Material;
+    fn update_material(&mut self);
+    fn get_to_be_deleted(&mut self) -> &mut bool;
 }
 
 impl Material {
@@ -42,7 +44,7 @@ impl Material {
 }
 
 impl<T: Render + Clone + 'static> PhysicsObeject for Object<T> {
-    fn physics_process(&mut self) {
+    fn physics_process(&mut self, _camera: &Camera2D) {
         match self.get_physics_type() {
             PhysicsType::Static => {}
             PhysicsType::Dynamic => {
@@ -63,11 +65,6 @@ impl<T: Render + Clone + 'static> PhysicsObeject for Object<T> {
                 self.movement_process();
             }
         };
-        if self.shape.mouse_in_area(Vec2::from(mouse_position())) {
-            self.get_render_shape_referance().set_colour(PURPLE);
-        }else {
-            self.get_render_shape_referance().set_colour(PURPLE);
-        }
     }
 
     fn get_drag(&self) -> Vec2 {
@@ -95,4 +92,11 @@ impl<T: Render + Clone + 'static> PhysicsObeject for Object<T> {
     fn get_render_shape_referance(&mut self) -> Box<&mut dyn Render> {
         Box::new(&mut self.shape)
     }
+    fn get_material(&mut self) -> &mut Material { &mut self.material }
+    fn update_material(&mut self) {
+        self.material.area = self.shape.get_area();
+        self.material.density = self.material.mass / self.material.area;
+        println!("Updated the material!")
+    }
+    fn get_to_be_deleted(&mut self) -> &mut bool { &mut self.to_be_deleted }
 }

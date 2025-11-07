@@ -1,6 +1,4 @@
-use std::clone;
-
-use macroquad::{self, input::is_mouse_button_down};
+use macroquad::{self};
 use macroquad::math::Vec2;
 use macroquad::color::Color;
 
@@ -20,6 +18,9 @@ pub(crate) trait Render {
     fn get_colour(&self) -> Color;
     fn set_colour(&mut self, colour: Color);
     fn mouse_in_area(&self, mouse_pos: Vec2) -> bool;
+    fn get_id(&self) -> &str;
+    fn get_measurements(&self) -> (f32, f32);
+    fn set_measurements(&mut self, measurements: (f32, f32));
 }
 
 #[derive(Clone, Copy)]
@@ -28,7 +29,8 @@ pub (crate) struct Object<T> where T: Render {
     material: Material,
     pub(crate) dx: f32,
     pub(crate) dy: f32,
-    phys_type: PhysicsType
+    phys_type: PhysicsType,
+    to_be_deleted: bool,
 }
 
 #[allow(dead_code)]
@@ -40,6 +42,7 @@ impl<T: Render> Object<T>{
             dx: 0.0,
             dy: 0.0,
             phys_type,
+            to_be_deleted: false,
         }
     }
     pub(crate) fn create(shape: T, mass: f32, phys_type: PhysicsType) -> Object<T> {
@@ -49,6 +52,7 @@ impl<T: Render> Object<T>{
             dx: 0.0,
             dy: 0.0,
             phys_type,
+            to_be_deleted: false,
         }
     }
     fn movement_process(&mut self) {

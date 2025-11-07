@@ -1,4 +1,4 @@
-use crate::measurements::{meter, vec2_meter};
+use crate::measurements::{meter};
 use crate::objects::*;
 use macroquad::color::Color;
 use macroquad::prelude::*;
@@ -91,12 +91,15 @@ impl Render for Square {
     }
     fn mouse_in_area(&self, mouse_pos: Vec2) -> bool {
         if meter(self.pos.x) <= mouse_pos.x && (meter(self.pos.x) + meter(self.size)) >= mouse_pos.x {
-            if meter(self.pos.y) <= mouse_pos.y && (meter(self.pos.y) + meter(self.size)) >= mouse_pos.y {
+            if meter(self.pos.y) <= mouse_pos.y && (meter(self.pos.y + self.size)) >= mouse_pos.y {
                 return true
             }
         }
         false
     }
+    fn get_id(&self) -> &str { "Square" }
+    fn get_measurements(&self) -> (f32, f32) { (self.size, -1.)}
+    fn set_measurements(&mut self, measurements: (f32, f32)) { self.size = measurements.0; }
 }
 
 impl Render for Rectangle {
@@ -142,12 +145,18 @@ impl Render for Rectangle {
         self.colour = colour;
     }
     fn mouse_in_area(&self, mouse_pos: Vec2) -> bool {
-        if meter(self.pos.x) >= mouse_pos.x && (meter(self.pos.x) + meter(self.length)) <= mouse_pos.x {
-            if meter(self.pos.y) >= mouse_pos.y && (meter(self.pos.y) + meter(self.width)) <= mouse_pos.y {
+        if meter(self.pos.x) <= mouse_pos.x && meter(self.pos.x + self.width) >= mouse_pos.x {
+            if meter(self.pos.y) <= mouse_pos.y && (meter(self.pos.y) + meter(self.length)) >= mouse_pos.y {
                 return true
             }
         }
         false
+    }
+    fn get_id(&self) -> &str { "Rectangle" }
+    fn get_measurements(&self) -> (f32, f32) { (self.width, self.length) }
+    fn set_measurements(&mut self, measurements: (f32, f32)) {
+        self.width = measurements.0;
+        self.length = measurements.1;
     }
 }
 impl Render for Circle {
@@ -187,11 +196,11 @@ impl Render for Circle {
         self.colour = colour;
     }
     fn mouse_in_area(&self, mouse_pos: Vec2) -> bool {
-        let distance = (vec2_meter(self.pos) - mouse_pos).length();
-        if distance <= self.radius {
-            true
-        } else {
-            false
-        }
+        let distance = (meter(self.pos.x) - mouse_pos.x) * (meter(self.pos.x) - mouse_pos.x)
+            + (meter(self.pos.y) - mouse_pos.y) * (meter(self.pos.y) - mouse_pos.y);
+        distance <= (meter(self.radius) * meter(self.radius))
     }
+    fn get_id(&self) -> &str { "Circle" }
+    fn get_measurements(&self) -> (f32, f32) { (self.radius, -1.) }
+    fn set_measurements(&mut self, measurements: (f32, f32)) { self.radius = measurements.0; }
 }

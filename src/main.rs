@@ -35,7 +35,7 @@ fn conf() -> Conf {
 }
 
 pub fn cam_to_world(input: Vec2, camera: &Camera2D) -> Vec2 {
-    //zoom coeficient
+    //zoom coefficient
     let co_x = camera.zoom.x * (screen_width() * 10.);
     let co_y = camera.zoom.y * (screen_height() * 10.);
 
@@ -44,7 +44,7 @@ pub fn cam_to_world(input: Vec2, camera: &Camera2D) -> Vec2 {
     output.x = input.x / co_x;
     output.y = input.y / co_y;
 
-    //retrun the new vector
+    //return the new vector
     output
 }
 
@@ -76,8 +76,9 @@ async fn main() {
     let mut phys_object: Vec<Box<dyn PhysicsObeject>> = Vec::new();
     
     let mut ui_id: String = String::from("");
+    let mut ui_text_save: String = String::from("");
     
-    let mut selected_object_index: Option<usize> = Some(1);
+    let mut selected_object_index: Option<usize> = None;
     phys_object.push(Box::new(rect));
     phys_object.push(Box::new(ball));
 
@@ -88,59 +89,35 @@ async fn main() {
 
         let mut render: Vec<Box<dyn Render + 'static>> = Vec::new();
         
-        let mut square: Option<Object<Rectangle>> = None;
-        let mut rect: Option<Object<Rectangle>> = None;
-        let mut ball: Option<Object<Circle>> = None;
-        
-        match mouse_mode {
-            MouseMode::Drag => {
-                if is_mouse_button_down(MouseButton::Left) {
-                    let world_mouse_after = Vec2::from(mouse_position());
-                    if let Some(last_pos) = world_mouse_before {
-                        let offset = world_mouse_after - last_pos;
-                        camera.target -= offset / (camera.zoom) / 1000.;
-                    }
-                    world_mouse_before = Some(world_mouse_after);
-                } else {
-                    world_mouse_before = None;
-                }
-            }
-            MouseMode::DrawSquare => {
-                square = draw_process_square(&mut draw_mouse_storage, &camera);
-            }
-            MouseMode::DrawRectangele => {
-                rect = draw_porcess_rectangele(&mut draw_mouse_storage, &camera);
-            }
-            MouseMode::DrawBall => {
-                ball = draw_porcess_ball(&mut draw_mouse_storage, &camera);
-            } //_ => {}
-        }
-        if let Some(sqr) = square {
-            phys_object.push(Box::new(sqr));
-        }
-        if let Some(rct) = rect {
-            phys_object.push(Box::new(rct));
-        }
-        if let Some(crl) = ball {
-            phys_object.push(Box::new(crl));
-        }
-        
         for (index, i) in &mut phys_object.iter_mut().enumerate() {
             render.push(i.get_render_shape());
             if pauorpla {
-                i.physics_process();
+                i.physics_process(&camera);
             }
-            if is_mouse_button_down(MouseButton::Left) {
-                if i.get_render_shape_referance().mouse_in_area(Vec2::from(mouse_position())) {
-                    println!("and I found an object for you!");
-                    selected_object_index = Some(index);
+            if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) {
+                if (mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none() {
+                    if i.get_render_shape_referance().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position()))) {
+                        selected_object_index = Some(index);
+                        ui_id = "".into();
+                    }
                 }
             }
         }
+        for i in 0..phys_object.len() {
+            if phys_object.get_mut(i).is_none() {
+                continue;
+            }else if *phys_object.get_mut(i).unwrap().get_to_be_deleted() {
+                phys_object.remove(i);
+                if selected_object_index == Option::from(i) {
+                    selected_object_index = None;
+                }
+            }
+        }
+
+        if is_key_pressed(KeyCode::Escape) { selected_object_index = None; }
         
+        build_ui(&mut zoom, &camera, &mut ui_id, &mut phys_object, selected_object_index, &mut ui_text_save);
         render_objects(&render);
-        
-        build_ui(&mut zoom, &camera, &mut ui_id, &mut phys_object, selected_object_index);
 
         if build_hot_bar(&mut pauorpla, &mut mouse_mode) {
             active = false;
@@ -178,10 +155,47 @@ async fn main() {
             camera.target -= offset;
         }
 
+        let mut square: Option<Object<Rectangle>> = None;
+        let mut rect: Option<Object<Rectangle>> = None;
+        let mut ball: Option<Object<Circle>> = None;
+
+        match mouse_mode {
+            MouseMode::Drag => {
+                if is_mouse_button_down(MouseButton::Left) {
+                    let world_mouse_after = Vec2::from(mouse_position());
+                    if let Some(last_pos) = world_mouse_before {
+                        let offset = world_mouse_after - last_pos;
+                        camera.target -= offset / (camera.zoom) / 1000.;
+                    }
+                    world_mouse_before = Some(world_mouse_after);
+                } else {
+                    world_mouse_before = None;
+                }
+            }
+            MouseMode::DrawSquare => {
+                square = draw_process_square(&mut draw_mouse_storage, &camera);
+            }
+            MouseMode::DrawRectangele => {
+                rect = draw_porcess_rectangele(&mut draw_mouse_storage, &camera);
+            }
+            MouseMode::DrawBall => {
+                ball = draw_porcess_ball(&mut draw_mouse_storage, &camera);
+            } //_ => {}
+        }
+        if let Some(sqr) = square {
+            phys_object.push(Box::new(sqr));
+        }
+        if let Some(rct) = rect {
+            phys_object.push(Box::new(rct));
+        }
+        if let Some(crl) = ball {
+            phys_object.push(Box::new(crl));
+        }
+
         if !active {
             request_quit();
         }
-
+        
         next_frame().await;
     }
 }
