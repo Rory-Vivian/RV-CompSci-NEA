@@ -412,5 +412,4 @@ pub(crate) fn create_side_bar(ui_id: &mut String, objects: &mut Vec<Box<dyn Phys
             build_bin_button(ui, ui_id, &mut skin, bin_button_style, objects, selected_index);
         },
     );
-    println!("{}", ui_id);
 }
