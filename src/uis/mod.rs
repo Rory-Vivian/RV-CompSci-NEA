@@ -3,21 +3,25 @@ use macroquad::prelude::*;
 use macroquad::ui::{Ui, Skin, Style, root_ui};
 
 use crate::MouseMode;
-use crate::objects::physics::PhysicsObeject;
-
+use crate::objects::physics::PhysicsObject;
 mod guidlines;
 mod sidebar;
 
+//Function to produce a button that changes colour based on a variable
 fn active_button(ui: &mut Ui,is_active: bool, active: &Style, mut inactive: Skin, label: &'static str) -> bool {
     let mut ret_val = false;
+    //Check if the button should appear as active
     if is_active {
+        //Create the skin style for the active button
         inactive.button_style = active.clone();
         ui.push_skin(&inactive);
+        //Create the button and return the value of the press
         if ui.button(None, label) {
             ret_val = true;
         }
         ui.pop_skin();
     }else {
+        //Use the default skin for the button
         if ui.button(None, label) { 
             ret_val = true;
         }
@@ -25,9 +29,10 @@ fn active_button(ui: &mut Ui,is_active: bool, active: &Style, mut inactive: Skin
     ret_val
 }
 
-#[allow(unused_variables)]
+//Build the hotbar for the UI
 pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> bool {
     let mut self_return = false;
+    //Use the defult bar style for the whole of the project
     let bar_style = root_ui()
         .style_builder()
         .color(Color::from_rgba(36, 36, 36, 255))
@@ -35,6 +40,7 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
         .text_color(WHITE)
         .build();
 
+    //Use the defult button style for the whole of the project
     let button_bar = root_ui()
         .style_builder()
         .background_margin(RectOffset::new(0.0, 16.0, 0.0, 16.0))
@@ -48,6 +54,7 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
         .text_color_clicked(WHITE)
         .build();
 
+    //Build the button active skin for this bar
     let button_bar_active = root_ui()
         .style_builder()
         .background_margin(RectOffset::new(0.0, 16.0, 0.0, 16.0))
@@ -61,33 +68,39 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
         .text_color_clicked(WHITE)
         .build();
 
+    //Create the bar skin
     let bar_skin = Skin {
         window_style: bar_style,
         button_style: button_bar,
         ..root_ui().default_skin()
     };
 
+    //Construct the top selection bar
     root_ui().push_skin(&bar_skin);
     root_ui().window(
         hash!(),
         Vec2::new(0., 0.),
         Vec2::new(screen_width(), 40.),
         |ui| {
+            //Use an active button for the mouse mode being drawing a square
             if active_button(ui, matches!(mouse_mode, MouseMode::DrawSquare), &button_bar_active, bar_skin.clone(), "Square") {
                 if matches!(mouse_mode, MouseMode::DrawSquare) { *mouse_mode = MouseMode::Drag; }
                 else { *mouse_mode = MouseMode::DrawSquare; }
             }
             ui.same_line(0.0);
+            //Use an active button for the mouse mode being for drawing a rectangle
             if active_button(ui, matches!(mouse_mode, MouseMode::DrawRectangele), &button_bar_active, bar_skin.clone(), "Rectangle") {
                 if matches!(mouse_mode, MouseMode::DrawRectangele) { *mouse_mode = MouseMode::Drag; }
                 else { *mouse_mode = MouseMode::DrawRectangele; }
             }
             ui.same_line(0.0);
+            //Use an active button for the mouse mode being for drawing a ball
             if active_button(ui, matches!(mouse_mode, MouseMode::DrawBall), &button_bar_active, bar_skin.clone(), "Ball") {
                 if matches!(mouse_mode, MouseMode::DrawBall) { *mouse_mode = MouseMode::Drag; }
                 else { *mouse_mode = MouseMode::DrawBall; }
             }
             ui.same_line(0.0);
+            //Check the game should be simulating the game, and display the pause/play button accordingly
             if *simulate {
                 if ui.button(None, "pause") {
                     *simulate = false;
@@ -97,6 +110,7 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
                     *simulate = true;
                 }
             }
+            //Check if the user would like to exit the program
             ui.same_line(0.0);
             if ui.button(None, "esc") {
                 self_return = true;
@@ -107,40 +121,11 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
     self_return
 }
 
-fn build_zoom_bar(zoom: &mut f32) {
-    // Build a simple semi-transparent purple skin
-    let window_style = root_ui()
-        .style_builder()
-        .color(Color::from_rgba(126, 29, 251, 0)) // semi-transparent
-        .text_color(WHITE)
-        .build();
-    let bar_style = root_ui().style_builder().text_color(WHITE).build();
-
-    // Apply the style to the window; inherit the rest from the default skin
-    let skin = Skin {
-        window_style,
-        label_style: bar_style,
-        ..root_ui().default_skin()
-    };
-
-    let bar_size = vec2(500.0, 40.0);
-    let bar_pos = vec2(
-        0.0,             // center horizontally
-        screen_height(), // 10px from bottom
-    );
-
-    // Push skin for the duration of this UI block
-    let _skin_guard = root_ui().push_skin(&skin);
-
-    root_ui().window(hash!("zoom_window"), bar_pos, bar_size, |ui| {
-        ui.slider(hash!("zoom_slider"), "Zoom", 10.0..200.0, zoom);
-    });
-}
-
-pub fn build_ui(zoom: &mut f32, camera: &Camera2D,ui_id: &mut String,
-                objects: &mut Vec<Box<dyn PhysicsObeject>>, selected_index: Option<usize>, ui_save_text: &mut String) {
-    build_zoom_bar(zoom);
-    guidlines::draw_guidlines(camera);
+//Construct the UI from the build_ui function
+pub fn build_ui(camera: &Camera2D, ui_id: &mut String,
+                objects: &mut Vec<Box<dyn PhysicsObject>>, selected_index: Option<usize>, ui_save_text: &mut String) {
+    guidlines::draw_guidelines(camera);
+    //Make sure an object is selected, and then allow the sidebar to be created
     if let Some(selected_object_index) = selected_index {
         sidebar::create_side_bar(ui_id, objects, selected_object_index, ui_save_text);
     }

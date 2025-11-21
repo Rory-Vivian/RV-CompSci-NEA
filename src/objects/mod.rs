@@ -8,6 +8,7 @@ pub(crate) mod create_objects;
 use physics::{Material, PhysicsType};
 use crate::measurements::{dt};
 
+//Give all the functions for shapes that can be rendered (this will be used for everything related to shapes)
 #[allow(dead_code)]
 pub(crate) trait Render {
     fn render(&self);
@@ -23,6 +24,7 @@ pub(crate) trait Render {
     fn set_measurements(&mut self, measurements: (f32, f32));
 }
 
+//Create the object struct
 #[derive(Clone, Copy)]
 pub (crate) struct Object<T> where T: Render {
     pub(crate) shape: T,
@@ -34,8 +36,9 @@ pub (crate) struct Object<T> where T: Render {
     to_be_deleted: bool,
 }
 
-#[allow(dead_code)]
+//Implement functions for the object trait
 impl<T: Render> Object<T>{
+    //New function for the Object type. dx, dy and gravity do not have to be constant, however to_be_deleted should always start false
     pub(crate) fn new(shape: T, material: Material, phys_type: PhysicsType) -> Object<T> {
         Object {
             shape,
@@ -47,6 +50,7 @@ impl<T: Render> Object<T>{
             to_be_deleted: false,
         }
     }
+    //The same as the previous new function, however creates the material for the shape and mass, saving time.
     pub(crate) fn create(shape: T, mass: f32, phys_type: PhysicsType) -> Object<T> {
         Object {
             material: Material::new(mass, shape.get_area()),
@@ -58,6 +62,7 @@ impl<T: Render> Object<T>{
             to_be_deleted: false,
         }
     }
+    //Process the movement of any objects
     fn movement_process(&mut self) {
         self.shape.get_pos().y += self.dy * dt();
         self.shape.get_pos().x += self.dx * dt();
@@ -65,6 +70,7 @@ impl<T: Render> Object<T>{
 }
 
 
+//Loop through all objects needed to be rendered, and render them
 pub fn render_objects(objects: &Vec<Box<dyn Render>>) {
     for object in objects {
         object.render();
