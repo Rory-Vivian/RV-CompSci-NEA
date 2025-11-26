@@ -90,14 +90,12 @@ async fn main() {
             if pauorpla {
                 i.physics_process(&camera);
             }
-            if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) {
-                if (mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none() {
-                    if i.get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position()))) {
-                        //Select the object the player has clicked on
-                        selected_object_index = Some(index);
-                        ui_id = "".into();
-                    }
-                }
+            if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) && 
+                ((mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none()) 
+                && i.get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position()))) {
+                    //Select the object the player has clicked on
+                    selected_object_index = Some(index);
+                    ui_id = "".into();
             }
         }
         // Finding if an object needs to be deleted, and then removing it from the nesasary places
@@ -136,13 +134,12 @@ async fn main() {
 
             if scroll.1 != 0. {
                 zoom += scroll.1 / 100.;
+            } else if is_key_down(KeyCode::Up) {
+                zoom += 1.
             } else {
-                if is_key_down(KeyCode::Up) {
-                    zoom += 1.
-                } else {
-                    zoom -= 1.
-                }
+                zoom -= 1.
             }
+            
             zoom = zoom.clamp(10., 200.);
 
             camera.target = Vec2::from(mouse_position());

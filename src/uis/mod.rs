@@ -105,10 +105,8 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
                 if ui.button(None, "pause") {
                     *simulate = false;
                 }
-            } else {
-                if ui.button(None, "play") {
-                    *simulate = true;
-                }
+            } else if ui.button(None, "play") {
+                *simulate = true;
             }
             //Check if the user would like to exit the program
             ui.same_line(0.0);

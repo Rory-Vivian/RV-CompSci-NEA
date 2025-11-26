@@ -1,15 +1,11 @@
-#![allow(unused, dead_code)]
-
 use macroquad::input::mouse_position;
-use macroquad::prelude::camera::mouse;
-use macroquad::prelude::scene::camera_pos;
 use macroquad::prelude::*;
 
 use crate::MouseMode;
 use crate::measurements::vec2_meter;
 use crate::objects::physics::{Material, PhysicsType};
-use crate::objects::shapes::{Circle, Rectangle, Square};
-use crate::objects::{self, Object, Render};
+use crate::objects::shapes::{Circle, Rectangle};
+use crate::objects::{Object, Render};
 
 //Created the rendered shape for a Square
 fn create_square_render(pos1: Vec2, pos2: Vec2, colour: Color) -> Rectangle {
@@ -19,24 +15,22 @@ fn create_square_render(pos1: Vec2, pos2: Vec2, colour: Color) -> Rectangle {
     let pos2 = vec2_meter(pos2);
 
     //The length in the x and y
-    let dx: f32 = (pos2.x - pos1.x);
-    let dy: f32 = (pos2.y - pos1.y);
+    let dx: f32 = pos2.x - pos1.x;
+    let dy: f32 = pos2.y - pos1.y;
 
     //The largest of the two lengths
     let length = dx.abs().max(dy.abs());
     //Calculate the length on each side
-    let x: f32;
-    let y: f32;
-    if pos2.x >= pos1.x {
-        x = length.abs();
+    let x: f32 = if pos2.x >= pos1.x {
+        length.abs()
     } else {
-        x = -length.abs();
-    }
-    if pos2.y >= pos1.y {
-        y = length.abs();
+        -length.abs()
+    };
+    let y: f32 = if pos2.y >= pos1.y {
+        length.abs()
     } else {
-        y = -length.abs();
-    }
+        -length.abs()
+    };
 
     //Create a rectangle with the specified dimensions
     Rectangle::new(pos1, x, y, colour)
@@ -49,8 +43,8 @@ fn create_rectangle_render(pos1: Vec2, pos2: Vec2, colour: Color) -> Rectangle {
     let pos2 = vec2_meter(pos2);
 
     //The length in the x and the y of the shape
-    let dx: f32 = (pos2.x - pos1.x);
-    let dy: f32 = (pos2.y - pos1.y);
+    let dx: f32 = pos2.x - pos1.x;
+    let dy: f32 = pos2.y - pos1.y;
 
     //Function to create the Render shape for the rectangle
     Rectangle::new(pos1, dx, dy, colour)
@@ -154,7 +148,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
                 if let Some(pos1) = *first_mouse_pos {
                     //Render the square between these points, and make the colour purple as to show it's highlighted
-                    let mut square = create_square_render(pos1, pos2, PURPLE);
+                    let square = create_square_render(pos1, pos2, PURPLE);
                     //Force the shape to render
                     square.render();
                 } else {
@@ -162,7 +156,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 }
             } else {
                 //Return true, as to signify that the user needs to make the mouse object, or clear the saved position
-                if let Some(pos1) = *first_mouse_pos {
+                if let Some(_pos1) = *first_mouse_pos {
                     return true;
                 }
                 *first_mouse_pos = None;
@@ -175,7 +169,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
                 if let Some(pos1) = *first_mouse_pos {
                     //Create a render object between the two points the user has specified
-                    let mut rectangle = create_rectangle_render(pos1, pos2, PURPLE);
+                    let rectangle = create_rectangle_render(pos1, pos2, PURPLE);
                     //Force this object to render
                     rectangle.render();
                 } else {
@@ -184,7 +178,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 }
             } else {
                 //Return true if the user has finished drawing there shape, or clear the first mouse position
-                if let Some(pos1) = *first_mouse_pos {
+                if let Some(_pos1) = *first_mouse_pos {
                     return true;
                 }
                 *first_mouse_pos = None;
@@ -197,7 +191,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
                 if let Some(pos1) = *first_mouse_pos {
                     //Create a render object for the shape the user would like to draw
-                    let mut ball = create_ball_render(pos1, pos2, PURPLE);
+                    let ball = create_ball_render(pos1, pos2, PURPLE);
                     //Force said object to render
                     ball.render();
                 } else {
@@ -206,7 +200,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 }
             } else {
                 //Return ture if the user has finished drawing, or clear the original value
-                if let Some(pos1) = *first_mouse_pos {
+                if let Some(_pos1) = *first_mouse_pos {
                     return true;
                 }
                 *first_mouse_pos = None;

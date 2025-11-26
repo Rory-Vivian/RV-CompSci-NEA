@@ -60,7 +60,7 @@ fn create_types_drop(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObject>>, sel
 
 //Create a style for a colour the user would like to use
 fn create_colour_button_skin(color: Color, root_ui: &mut Ui) -> Style {
-    return root_ui
+    root_ui
         //use the defult button style
         .style_builder()
         .background_margin(RectOffset::new(0.0, 16.0, 0.0, 16.0))
@@ -74,7 +74,7 @@ fn create_colour_button_skin(color: Color, root_ui: &mut Ui) -> Style {
         .text_color(WHITE)
         .text_color_hovered(WHITE)
         .text_color_clicked(WHITE)
-        .build();
+        .build()
 }
 
 //Create the buttons for the user to change the colour of the shape they would like ot edit
@@ -84,7 +84,7 @@ fn create_colour_buttons(ui: &mut Ui, colour_button_style: Style, defult_skin: &
     //Set the button style to the colour of the shape
     defult_skin.button_style = colour_button_style;
     //Hold the skin so it is dropped at the end of the function
-    let _skin_hold = ui.push_skin(&defult_skin);
+    let _skin_hold = ui.push_skin(defult_skin);
     //Check if the user needs the colours drop-down
     if ui.button(None, "           ") {
         if *ui_id == "colour_dropdown_options" {
@@ -283,7 +283,7 @@ fn create_shape_inputs(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObject>>, s
             ui.same_line(0.);
             ui.editbox(hash!(), Vec2::new(100., 20.), &mut text_box_1);
             //If the user changes a value, update the square
-            if text_box_1_save != text_box_1_save {
+            if text_box_1 != text_box_1_save {
                 *ui_id = "text_input_shape_1".into();
                 *ui_text_save = text_box_1_save.clone();
                 //Update the square, and then update its material (changing density of the object)
@@ -442,6 +442,7 @@ pub(crate) fn create_side_bar(ui_id: &mut String, objects: &mut Vec<Box<dyn Phys
 
     //Create the skin for the sidebar to use for the UI
     let mut skin = Skin {
+        label_style: window_style.clone(),
         window_style,
         button_style,
         editbox_style: input_style,

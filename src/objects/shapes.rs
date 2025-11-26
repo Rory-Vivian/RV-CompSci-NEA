@@ -30,6 +30,7 @@ pub struct Circle {
 }
 
 //New function for a square
+#[allow(dead_code)]
 impl Square {
     pub(crate) fn new(pos: Vec2, size: f32, colour: Color) -> Square {
         Square { pos, size, colour }
