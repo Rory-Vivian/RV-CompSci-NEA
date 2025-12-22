@@ -32,6 +32,7 @@ pub (crate) struct Object<T> where T: Render {
     gravity: f32,
     pub(crate) dx: f32,
     pub(crate) dy: f32,
+    has_air_resistance: bool,
     phys_type: PhysicsType,
     to_be_deleted: bool,
 }
@@ -46,6 +47,7 @@ impl<T: Render> Object<T>{
             dx: 0.0,
             dy: 0.0,
             gravity: 9.81,
+            has_air_resistance: true,
             phys_type,
             to_be_deleted: false,
         }
@@ -58,6 +60,7 @@ impl<T: Render> Object<T>{
             dx: 0.0,
             dy: 0.0,
             gravity: 9.81,
+            has_air_resistance: true,
             phys_type,
             to_be_deleted: false,
         }

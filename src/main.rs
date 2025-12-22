@@ -1,6 +1,9 @@
+use std::cmp::PartialEq;
+use std::thread::park_timeout_ms;
 use macroquad::miniquad::window::request_quit;
 //External libraries
 use macroquad::prelude::*;
+use macroquad::rand::{gen_range, rand};
 
 //Internal Modules
 mod measurements;
@@ -16,6 +19,7 @@ use crate::uis::build_ui;
 //use measurements::*;
 use objects::*;
 use uis::build_hot_bar;
+use crate::measurements::{dt, QuadTree, Rect, Particle, Point};
 
 #[derive(Clone)]
 #[allow(unused)]
@@ -37,7 +41,7 @@ fn conf() -> Conf {
 
 //Main function called by macroquad as to allow the program to render.
 #[macroquad::main(conf)]
-async fn main() {
+ async fn main() {
     //Basic and required variables
     let mut active = true;
     let mut mouse_mode = MouseMode::Drag;
@@ -66,20 +70,73 @@ async fn main() {
 
     //Create a list of all physics objects
     let mut phys_object: Vec<Box<dyn PhysicsObject>> = Vec::new();
+
+    //TEST LIST PLEASE DELETE
+    let mut particles: Vec<Particle> = Vec::new();
     
     let mut ui_id: String = String::from("");
     let mut ui_text_save: String = String::from("");
     
     let mut selected_object_index: Option<usize> = None;
-    //Simulate the test objects (PLEASE REMOVE BEFORE FINAL BUILD)
-    phys_object.push(Box::new(rect));
-    phys_object.push(Box::new(ball));
+
+    let mut boundary = Rect::new(0., 0., 100.0, 100.0);
+
+    for _i in 0..500 {
+        let p = Particle::new(rand::gen_range(boundary.x - boundary.w, boundary.x + boundary.w), rand::gen_range(boundary.y - boundary.h, boundary.y + boundary.h), rand::gen_range(1., 4.));
+        particles.push(p);
+    }
 
     //Main loop function
     loop {
+
+        // let mut corner1 = Vec2::new(particles[0].x,particles[0].y);
+        // let mut corner2 = Vec2::new(particles[0].x,particles[0].y);
+
         clear_background(Color::from_rgba(30, 30, 30, 255));
         // set camera and produce the next frame
         set_camera(&camera);
+
+        // for p in &particles {
+        //     if p.x < corner1.x { corner1.x = p.x; }
+        //     if p.y < corner1.y { corner1.y = p.y; }
+        //     if p.x > corner2.x { corner2.x = p.x; }
+        //     if p.y > corner2.y { corner2.y = p.y; }
+        // }
+
+        // let w = (corner2.x - corner1.x).abs();
+        // let h = (corner2.y - corner1.y).abs();
+        //
+        // boundary.x = corner1.x + w/2.;
+        // boundary.y = corner2.y - h/2.;
+        // boundary.w = w/2.;
+        // boundary.h = h/2.;
+
+        // let mut qtree = QuadTree::new(boundary, 4);
+        //
+        // for p in 0..particles.len() {
+        //     particles[p].highlight = false;
+        //     qtree.insert(Point::new(particles[p].x, particles[p].y, p));
+        // }
+        //
+        // for p in 0..particles.len() {
+        //     let others = qtree.query(&Rect::new(particles[p].x, particles[p].y,
+        //                                         particles[p].r*2., particles[p].r*2.));
+        //     for o in 0..others.len() {
+        //         if p != others[o].index {
+        //             if particles[p].intersects(&particles[others[o].index]) {
+        //                 particles[p].highlight = true;
+        //                 particles[others[o].index].highlight = true;
+        //             }
+        //         }
+        //     }
+        // }
+
+        // for i in &mut particles {
+        //     i.move_process();
+        //     i.render();
+        // }
+
+        //qtree.show();
 
         //Create the list of objects to render
         let mut render: Vec<Box<dyn Render + 'static>> = Vec::new();
@@ -90,8 +147,8 @@ async fn main() {
             if pauorpla {
                 i.physics_process(&camera);
             }
-            if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) && 
-                ((mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none()) 
+            if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) &&
+                ((mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none())
                 && i.get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position()))) {
                     //Select the object the player has clicked on
                     selected_object_index = Some(index);
@@ -118,8 +175,16 @@ async fn main() {
         render_objects(&render);
 
         //Build the hotbar, and figure out if the software should close
-        if build_hot_bar(&mut pauorpla, &mut mouse_mode) {
+        let (stop, clear) = build_hot_bar(&mut pauorpla, &mut mouse_mode);
+        if stop {
             active = false;
+        }
+        
+        if clear {
+            selected_object_index = None;
+            for i in 0..phys_object.len() {
+                phys_object.pop();
+            }
         }
 
         //Change the level of the cameras zoom
@@ -139,7 +204,7 @@ async fn main() {
             } else {
                 zoom -= 1.
             }
-            
+
             zoom = zoom.clamp(10., 200.);
 
             camera.target = Vec2::from(mouse_position());
@@ -199,7 +264,10 @@ async fn main() {
         if !active {
             request_quit();
         }
-        
+
+        // let _position = camera.world_to_screen(Vec2::new(10., 100.));
+        // draw_text(get_fps().to_string().as_str(), -200., -200., 10., WHITE);
+
         next_frame().await;
     }
 }

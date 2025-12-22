@@ -30,7 +30,7 @@ fn active_button(ui: &mut Ui,is_active: bool, active: &Style, mut inactive: Skin
 }
 
 //Build the hotbar for the UI
-pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> bool {
+pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> (bool, bool) {
     let mut self_return = false;
     //Use the defult bar style for the whole of the project
     let bar_style = root_ui()
@@ -76,6 +76,7 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
     };
 
     //Construct the top selection bar
+    let mut return_2 = false;
     root_ui().push_skin(&bar_skin);
     root_ui().window(
         hash!(),
@@ -113,10 +114,13 @@ pub(crate) fn build_hot_bar(simulate: &mut bool, mouse_mode: &mut MouseMode) -> 
             if ui.button(None, "esc") {
                 self_return = true;
             }
+            ui.same_line(0.0);
+            return_2 = if ui.button(None, "clear") { true } else { false }
         },
     );
+
     root_ui().pop_skin();
-    self_return
+    (self_return, return_2)
 }
 
 //Construct the UI from the build_ui function
