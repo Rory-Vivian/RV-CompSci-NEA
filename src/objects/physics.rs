@@ -35,6 +35,7 @@ pub(crate) trait PhysicsObject {
     fn get_gravity(&mut self) -> &mut f32;
     fn get_velocity(&self) -> Vec2;
     fn set_velocity(&mut self, velocity: Vec2);
+    fn set_do_air_resistance(&mut self) -> &mut bool;
 }
 
 //Give default functions to material
@@ -122,4 +123,5 @@ impl<T: Render + Clone + 'static> PhysicsObject for Object<T> {
         self.dx = velocity.x;
         self.dy = velocity.y;
     }
+    fn set_do_air_resistance(&mut self) -> &mut bool { &mut self.do_air_resistance }
 }

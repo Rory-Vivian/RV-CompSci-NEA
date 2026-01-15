@@ -4,6 +4,7 @@ use macroquad::prelude::Vec2;
 use macroquad::ui::*;
 use macroquad::window::{screen_height, screen_width};
 use crate::objects::physics::{PhysicsObject, PhysicsType};
+use crate::uis::active_button;
 
 //Check if the given string is only comprised of numbers
 fn is_only_numbers(s: &str) -> bool {
@@ -389,6 +390,23 @@ fn build_bin_button(ui: &mut Ui, _ui_id: &mut String, default_skin: &mut Skin, b
     }
 }
 
+fn build_air_resistance_checkbox(ui: &mut Ui, objects: &mut Vec<Box<dyn PhysicsObject>>, active: &Style, skin: &Skin, selected_index: usize) {
+    //Get the current value for air resistance
+    let value = objects.get_mut(selected_index).unwrap().set_do_air_resistance();
+    ui.label(None, "Air Resistance: ");
+    ui.same_line(0.);
+    if *value {
+        if active_button(ui, *value, active, skin.clone(), "[X]") {
+            *value = false;
+        }
+    }else {
+        if active_button(ui, *value, active, skin.clone(), "[ ]") {
+            *value = true;
+        }
+    }
+    *objects.get_mut(selected_index).unwrap().set_do_air_resistance() = *value;
+}
+
 //Create the sidebar for the user
 pub(crate) fn create_side_bar(ui_id: &mut String, objects: &mut Vec<Box<dyn PhysicsObject>>, selected_index: usize, ui_text_save: &mut String) {
     //Use the normal style for the window for the whole project
@@ -435,6 +453,19 @@ pub(crate) fn create_side_bar(ui_id: &mut String, objects: &mut Vec<Box<dyn Phys
         .color_inactive(Color::from_rgba(100, 0, 0, 255))
         .color_hovered(Color::from_rgba(200, 0, 0, 255))
         .color_clicked(Color::from_rgba(255, 0, 0, 255))
+        .text_color(WHITE)
+        .text_color_hovered(WHITE)
+        .text_color_clicked(WHITE)
+        .build();
+
+    let button_active = root_ui()
+        .style_builder()
+        .background_margin(RectOffset::new(0.0, 16.0, 0.0, 16.0))
+        .margin(RectOffset::new(16.0, 0.0, 16.0, -16.0))
+        .color(PURPLE)
+        .color_inactive(PURPLE)
+        .color_hovered(Color::from_rgba(143, 2, 244, 255))
+        .color_clicked(WHITE)
         .text_color(WHITE)
         .text_color_hovered(WHITE)
         .text_color_clicked(WHITE)
@@ -489,6 +520,8 @@ pub(crate) fn create_side_bar(ui_id: &mut String, objects: &mut Vec<Box<dyn Phys
                 objects.get_mut(selected_index).unwrap().get_render_shape_reference().set_colour(colour_option);
             }
             build_transparency_slider(ui, objects, selected_index);
+            ui.push_skin(&skin);
+            build_air_resistance_checkbox(ui, objects, &button_active, &skin, selected_index);
             build_bin_button(ui, ui_id, &mut skin, bin_button_style, objects, selected_index);
         },
     );

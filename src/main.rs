@@ -1,9 +1,6 @@
-use std::cmp::PartialEq;
-use std::thread::park_timeout_ms;
 use macroquad::miniquad::window::request_quit;
 //External libraries
 use macroquad::prelude::*;
-use macroquad::rand::{gen_range, rand};
 
 //Internal Modules
 mod measurements;
@@ -19,7 +16,10 @@ use crate::uis::build_ui;
 //use measurements::*;
 use objects::*;
 use uis::build_hot_bar;
+#[allow(unused)]
 use crate::measurements::{dt, QuadTree, Rect, Particle, Point};
+use crate::measurements::meter;
+use crate::objects::physics::PhysicsType::Static;
 
 #[derive(Clone)]
 #[allow(unused)]
@@ -47,11 +47,11 @@ fn conf() -> Conf {
     let mut mouse_mode = MouseMode::Drag;
 
     //Create shape for testing (PLEASE REMOVE BEFORE FINAL BUILD)
-    let circ = Circle::new(Vec2::new(1.0, 1.0), 0.1, ORANGE);
-    let sqr = Rectangle::new(Vec2::new(0.0, 0.0), 1.0, 1.0, WHITE);
+    // let circ = Circle::new(Vec2::new(1.0, 1.0), 0.1, ORANGE);
+    // let sqr = Rectangle::new(Vec2::new(0.0, 0.0), 1.0, 1.0, WHITE);
     
-    let ball = Object::create(circ, 3.85, PhysicsType::Dynamic);
-    let rect = Object::create(sqr, 3.85, PhysicsType::Static);
+    // let ball = Object::create(circ, 3.85, PhysicsType::Dynamic);
+    // let rect = Object::create(sqr, 3.85, PhysicsType::Static);
 
     //Create the camera for the project
     let mut camera = Camera2D {
@@ -79,12 +79,15 @@ fn conf() -> Conf {
     
     let mut selected_object_index: Option<usize> = None;
 
-    let mut boundary = Rect::new(0., 0., 100.0, 100.0);
+    let boundary = Rect::new(0., 0., 100.0, 100.0);
 
     for _i in 0..500 {
         let p = Particle::new(rand::gen_range(boundary.x - boundary.w, boundary.x + boundary.w), rand::gen_range(boundary.y - boundary.h, boundary.y + boundary.h), rand::gen_range(1., 4.));
         particles.push(p);
     }
+
+    let mut last_mouse_drag_pos: Option<Vec2> = None;
+    let mut before_phys_type: Option<PhysicsType> = None;
 
     //Main loop function
     loop {
@@ -141,21 +144,6 @@ fn conf() -> Conf {
         //Create the list of objects to render
         let mut render: Vec<Box<dyn Render + 'static>> = Vec::new();
 
-        //Physics function for all physics objects
-        for (index, i) in &mut phys_object.iter_mut().enumerate() {
-            render.push(i.get_render_shape());
-            if pauorpla {
-                i.physics_process(&camera);
-            }
-            if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) &&
-                ((mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none())
-                && i.get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position()))) {
-                    //Select the object the player has clicked on
-                    selected_object_index = Some(index);
-                    ui_id = "".into();
-            }
-        }
-        // Finding if an object needs to be deleted, and then removing it from the nesasary places
         for i in 0..phys_object.len() {
             if phys_object.get_mut(i).is_none() {
                 continue;
@@ -164,8 +152,57 @@ fn conf() -> Conf {
                 if selected_object_index == Option::from(i) {
                     selected_object_index = None;
                 }
+            }else if let Some(n) = selected_object_index {
+                if n == i {
+                    phys_object.get_mut(i).unwrap().get_render_shape_reference().set_outline_colour(PURPLE);
+
+                    let mouse_pos = camera.screen_to_world(Vec2::from(mouse_position()));
+                    let j = phys_object.get_mut(i).unwrap();
+                    if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) &&
+                        (mouse_position().0 < screen_width() - 400.) && i == selected_object_index.unwrap() {
+                        if before_phys_type.is_none() {
+                            before_phys_type = Some(j.get_physics_type().clone());
+                        }
+
+                        if last_mouse_drag_pos.is_some() {
+                            *j.get_render_shape_reference().get_pos() = *j.get_render_shape_reference().get_pos() + (mouse_pos - last_mouse_drag_pos.unwrap()) / meter(1.);
+                            j.set_physics_type(Static);
+                            if pauorpla { j.set_velocity(Vec2::new(0.0, 0.0)); }
+                        }
+
+                        if last_mouse_drag_pos.is_some() {
+                            last_mouse_drag_pos = Some(camera.screen_to_world(Vec2::from(mouse_position())));
+                        } else if j.get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position()))) {
+                            last_mouse_drag_pos = Some(camera.screen_to_world(Vec2::from(mouse_position())));
+                        }
+                    } else {
+                        last_mouse_drag_pos = None;
+                        if before_phys_type.is_some() {
+                            j.set_physics_type(before_phys_type.unwrap());
+                            before_phys_type = None;
+                        }
+                    }
+                }  else {
+                    phys_object.get_mut(i).unwrap().get_render_shape_reference().set_outline_colour(BLACK);
+                }
             }
         }
+        //Physics function for all physics objects
+        for (index, i) in &mut phys_object.iter_mut().enumerate() {
+            render.push(i.get_render_shape());
+            if pauorpla {
+                i.physics_process(&camera);
+            }
+            if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) &&
+                ((mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none())
+                && i.get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position())))
+                && last_mouse_drag_pos.is_none() {
+                    //Select the object the player has clicked on
+                    selected_object_index = Some(index);
+                    ui_id = "".into();
+            }
+        }
+        // Finding if an object needs to be deleted, and then removing it from the nesasary places
 
         //Allow the user to unselect any objects they have selected
         if is_key_pressed(KeyCode::Escape) { selected_object_index = None; }
@@ -182,7 +219,7 @@ fn conf() -> Conf {
         
         if clear {
             selected_object_index = None;
-            for i in 0..phys_object.len() {
+            for _i in 0..phys_object.len() {
                 phys_object.pop();
             }
         }
@@ -224,10 +261,11 @@ fn conf() -> Conf {
         let mut square: Option<Object<Rectangle>> = None;
         let mut rect: Option<Object<Rectangle>> = None;
         let mut ball: Option<Object<Circle>> = None;
+        let mut added_object = false;
 
         match mouse_mode {
             MouseMode::Drag => {
-                if is_mouse_button_down(MouseButton::Left) && (selected_object_index.is_none() || mouse_position().0 < screen_width() - 400.) {
+                if (is_mouse_button_down(MouseButton::Left) && (selected_object_index.is_none() || mouse_position().0 < screen_width() - 400.)) && last_mouse_drag_pos.is_none() {
                     let world_mouse_after = Vec2::from(mouse_position());
                     if let Some(last_pos) = world_mouse_before {
                         let offset = world_mouse_after - last_pos;
@@ -252,12 +290,20 @@ fn conf() -> Conf {
         //Push the square circle or rectangle into the physics objects list
         if let Some(sqr) = square {
             phys_object.push(Box::new(sqr));
+            added_object = true;
         }
         if let Some(rct) = rect {
             phys_object.push(Box::new(rct));
+            added_object = true;
         }
         if let Some(crl) = ball {
             phys_object.push(Box::new(crl));
+            added_object = true;
+        }
+
+        if added_object {
+            mouse_mode = MouseMode::Drag;
+            selected_object_index = Some(phys_object.len() - 1);
         }
 
         //If required exit the program, and then move onto the next frame

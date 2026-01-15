@@ -33,7 +33,7 @@ fn create_square_render(pos1: Vec2, pos2: Vec2, colour: Color) -> Rectangle {
     };
 
     //Create a rectangle with the specified dimensions
-    Rectangle::new(pos1, x, y, colour)
+    Rectangle::new(pos1, x, y, colour, BLACK)
 }
 
 //Create the render shape of a rectangle
@@ -47,7 +47,7 @@ fn create_rectangle_render(pos1: Vec2, pos2: Vec2, colour: Color) -> Rectangle {
     let dy: f32 = pos2.y - pos1.y;
 
     //Function to create the Render shape for the rectangle
-    Rectangle::new(pos1, dx, dy, colour)
+    Rectangle::new(pos1, dx, dy, colour, BLACK)
 }
 
 //Create the render shape of a ball
@@ -62,7 +62,7 @@ fn create_ball_render(pos1: Vec2, pos2: Vec2, colour: Color) -> Circle {
     let r = dx.max(dy);
 
     //Create the circle render
-    Circle::new(pos1, r, colour)
+    Circle::new(pos1, r, colour, BLACK)
 }
 
 //Create a square object, by creating the render shape, and the material for the object
@@ -122,11 +122,11 @@ pub fn draw_process_rectangle(first_mouse_pos: &mut Option<Vec2>, camera: &Camer
 
 //Create the object the user would like to produce
 pub fn draw_process_ball(first_mouse_pos: &mut Option<Vec2>, camera: &Camera2D) -> Option<Object<Circle>> {
+    let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
     if draw_process(MouseMode::DrawBall, first_mouse_pos, camera) {
         //Used the mouse position saved
         if let Some(pos1) = *first_mouse_pos {
             //Create the object from the 2 mouse positons
-            let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
             let ball = create_ball(pos1, pos2);
             //Clear the saved mouse position
             *first_mouse_pos = None;
@@ -143,7 +143,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
     match mouse_mode {
         //The user is drawing a square
         MouseMode::DrawSquare => {
-            if is_mouse_button_down(MouseButton::Left) {
+            if is_mouse_button_down(MouseButton::Left) && mouse_position().1 < 100. {
                 //Get the current mouse position, or save the first mouse position the usr has used
                 let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
                 if let Some(pos1) = *first_mouse_pos {
@@ -156,7 +156,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 }
             } else {
                 //Return true, as to signify that the user needs to make the mouse object, or clear the saved position
-                if let Some(_pos1) = *first_mouse_pos {
+                if let Some(_pos1) = *first_mouse_pos && mouse_position().1 < 100. {
                     return true;
                 }
                 *first_mouse_pos = None;
@@ -164,7 +164,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
         }
         //The user is drawing a rectangle
         MouseMode::DrawRectangele => {
-            if is_mouse_button_down(MouseButton::Left) {
+            if is_mouse_button_down(MouseButton::Left) && mouse_position().1 > 40. {
                 //Get the current mouse position, or save the current mouse position the user has used
                 let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
                 if let Some(pos1) = *first_mouse_pos {
@@ -178,7 +178,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 }
             } else {
                 //Return true if the user has finished drawing there shape, or clear the first mouse position
-                if let Some(_pos1) = *first_mouse_pos {
+                if let Some(_pos1) = *first_mouse_pos && mouse_position().1 > 40. {
                     return true;
                 }
                 *first_mouse_pos = None;
@@ -189,7 +189,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
             if is_mouse_button_down(MouseButton::Left) {
                 //Get the current mouse position, or save the mouse position the user has used
                 let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
-                if let Some(pos1) = *first_mouse_pos {
+                if let Some(pos1) = *first_mouse_pos && mouse_position().1 > 40. {
                     //Create a render object for the shape the user would like to draw
                     let ball = create_ball_render(pos1, pos2, PURPLE);
                     //Force said object to render
@@ -200,7 +200,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 }
             } else {
                 //Return ture if the user has finished drawing, or clear the original value
-                if let Some(_pos1) = *first_mouse_pos {
+                if let Some(_pos1) = *first_mouse_pos && mouse_position().1 > 40. {
                     return true;
                 }
                 *first_mouse_pos = None;

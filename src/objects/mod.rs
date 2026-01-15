@@ -22,6 +22,8 @@ pub(crate) trait Render {
     fn get_id(&self) -> &str;
     fn get_measurements(&self) -> (f32, f32);
     fn set_measurements(&mut self, measurements: (f32, f32));
+    fn get_outline_colour(&self) -> &Color;
+    fn set_outline_colour(&mut self, colour: Color);
 }
 
 //Create the object struct
@@ -32,7 +34,7 @@ pub (crate) struct Object<T> where T: Render {
     gravity: f32,
     pub(crate) dx: f32,
     pub(crate) dy: f32,
-    has_air_resistance: bool,
+    do_air_resistance: bool,
     phys_type: PhysicsType,
     to_be_deleted: bool,
 }
@@ -47,11 +49,12 @@ impl<T: Render> Object<T>{
             dx: 0.0,
             dy: 0.0,
             gravity: 9.81,
-            has_air_resistance: true,
+            do_air_resistance: true,
             phys_type,
             to_be_deleted: false,
         }
     }
+    #[allow(dead_code)]
     //The same as the previous new function, however creates the material for the shape and mass, saving time.
     pub(crate) fn create(shape: T, mass: f32, phys_type: PhysicsType) -> Object<T> {
         Object {
@@ -60,7 +63,7 @@ impl<T: Render> Object<T>{
             dx: 0.0,
             dy: 0.0,
             gravity: 9.81,
-            has_air_resistance: true,
+            do_air_resistance: true,
             phys_type,
             to_be_deleted: false,
         }

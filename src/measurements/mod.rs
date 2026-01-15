@@ -1,3 +1,4 @@
+#![allow(unused)]
 use macroquad::color::{RED, YELLOW};
 use macroquad::time::get_frame_time;
 use macroquad::math::Vec2;

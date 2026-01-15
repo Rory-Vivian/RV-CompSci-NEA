@@ -10,6 +10,7 @@ pub struct Square {
     pos: Vec2,
     size: f32,
     colour: Color,
+    outline_colour: Color,
 }
 
 //Struct for a rectangle
@@ -19,6 +20,7 @@ pub struct Rectangle {
     width: f32,
     length: f32,
     colour: Color,
+    outline_colour: Color,
 }
 
 //Struct for a circle
@@ -27,34 +29,26 @@ pub struct Circle {
     pos: Vec2,
     radius: f32,
     colour: Color,
+    outline_colour: Color,
 }
 
 //New function for a square
 #[allow(dead_code)]
 impl Square {
-    pub(crate) fn new(pos: Vec2, size: f32, colour: Color) -> Square {
-        Square { pos, size, colour }
+    pub(crate) fn new(pos: Vec2, size: f32, colour: Color, outline_colour: Color) -> Square {
+        Square { pos, size, colour, outline_colour }
     }
 }
 //New function for a Rectangle
 impl Rectangle {
-    pub(crate) fn new(pos: Vec2, width: f32, length: f32, colour: Color) -> Rectangle {
-        Rectangle {
-            pos,
-            width,
-            length,
-            colour,
-        }
+    pub(crate) fn new(pos: Vec2, width: f32, length: f32, colour: Color, outline_colour: Color) -> Rectangle {
+        Rectangle { pos, width, length, colour, outline_colour, }
     }
 }
 //New function for a Circle
 impl Circle {
-    pub(crate) fn new(pos: Vec2, radius: f32, colour: Color) -> Circle {
-        Circle {
-            pos,
-            radius,
-            colour,
-        }
+    pub(crate) fn new(pos: Vec2, radius: f32, colour: Color, outline_colour: Color) -> Circle {
+        Circle { pos, radius, colour, outline_colour, }
     }
 }
 
@@ -63,8 +57,6 @@ impl Circle {
 impl Render for Square {
     //Draw the shape and the outline on=top of said shape
     fn render(&self) {
-        let mut outline = BLACK;
-        outline.a = self.colour.a;
         draw_rectangle(
             meter(self.pos.x),
             meter(self.pos.y),
@@ -78,7 +70,7 @@ impl Render for Square {
             meter(self.size),
             meter(self.size),
             1.,
-            outline,
+            self.outline_colour,
         );
     }
     //Getters for area, position, a cloned self, drag and colour
@@ -89,7 +81,7 @@ impl Render for Square {
         &mut self.pos
     }
     fn clone_box(&mut self) -> Box<dyn Render> {
-        Box::new(Square::new(self.pos.clone(), self.size, self.colour))
+        Box::new(Square::new(self.pos.clone(), self.size, self.colour, self.outline_colour))
     }
     fn get_drag_coefficient(&self) -> f32 {
         1.05
@@ -109,14 +101,14 @@ impl Render for Square {
     fn get_id(&self) -> &str { "Square" }
     fn get_measurements(&self) -> (f32, f32) { (self.size, -1.)}
     fn set_measurements(&mut self, measurements: (f32, f32)) { self.size = measurements.0; }
+    fn get_outline_colour(&self) -> &Color { &self.outline_colour }
+    fn set_outline_colour(&mut self, colour: Color) { self.outline_colour = colour; }
 }
 
 //Implementing Render for Rectangle
 impl Render for Rectangle {
     //Render the Rectangle and the Outline of said rectangle
     fn render(&self) {
-        let mut outline = BLACK;
-        outline.a = self.colour.a;
         draw_rectangle(
             meter(self.pos.x),
             meter(self.pos.y),
@@ -130,7 +122,7 @@ impl Render for Rectangle {
             meter(self.width),
             meter(self.length),
             1.,
-            outline,
+            self.outline_colour,
         );
     }
     //Getter for the area, position, a clone of self, the drag co-efficient, and the colour
@@ -146,6 +138,7 @@ impl Render for Rectangle {
             self.width,
             self.length,
             self.colour,
+            self.outline_colour
         ))
     }
     fn get_drag_coefficient(&self) -> f32 {
@@ -170,13 +163,13 @@ impl Render for Rectangle {
         self.width = measurements.0;
         self.length = measurements.1;
     }
+    fn get_outline_colour(&self) -> &Color { &self.outline_colour }
+    fn set_outline_colour(&mut self, colour: Color) { self.outline_colour = colour; }
 }
 //Implement Render for circle
 impl Render for Circle {
     //Render the shape and then render the outline of the shape on-top of it
     fn render(&self) {
-        let mut outline = BLACK;
-        outline.a = self.colour.a;
         draw_poly(
             meter(self.pos.x),
             meter(self.pos.y),
@@ -190,7 +183,7 @@ impl Render for Circle {
             meter(self.pos.y),
             meter(self.radius),
             1.,
-            outline,
+            self.outline_colour,
         );
     }
     //Getter functions for the area, position, clone of self, drag_coefficient and colour
@@ -201,7 +194,7 @@ impl Render for Circle {
         &mut self.pos
     }
     fn clone_box(&mut self) -> Box<dyn Render> {
-        Box::new(Circle::new(self.pos.clone(), self.radius, self.colour))
+        Box::new(Circle::new(self.pos.clone(), self.radius, self.colour, self.outline_colour))
     }
     fn get_drag_coefficient(&self) -> f32 {
         0.47
@@ -223,4 +216,8 @@ impl Render for Circle {
     fn get_id(&self) -> &str { "Circle" }
     fn get_measurements(&self) -> (f32, f32) { (self.radius, -1.) }
     fn set_measurements(&mut self, measurements: (f32, f32)) { self.radius = measurements.0; }
+    fn get_outline_colour(&self) -> &Color { &self.outline_colour }
+    fn set_outline_colour(&mut self, colour: Color) {
+        self.outline_colour = colour;
+    }
 }
