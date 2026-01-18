@@ -70,21 +70,13 @@ fn conf() -> Conf {
 
     //Create a list of all physics objects
     let mut phys_object: Vec<Box<dyn PhysicsObject>> = Vec::new();
-
-    //TEST LIST PLEASE DELETE
-    let mut particles: Vec<Particle> = Vec::new();
     
     let mut ui_id: String = String::from("");
     let mut ui_text_save: String = String::from("");
     
     let mut selected_object_index: Option<usize> = None;
 
-    let boundary = Rect::new(0., 0., 100.0, 100.0);
-
-    for _i in 0..500 {
-        let p = Particle::new(rand::gen_range(boundary.x - boundary.w, boundary.x + boundary.w), rand::gen_range(boundary.y - boundary.h, boundary.y + boundary.h), rand::gen_range(1., 4.));
-        particles.push(p);
-    }
+    let mut boundary = Rect::new(0., 0., 100.0, 100.0);
 
     let mut last_mouse_drag_pos: Option<Vec2> = None;
     let mut before_phys_type: Option<PhysicsType> = None;
@@ -92,54 +84,44 @@ fn conf() -> Conf {
     //Main loop function
     loop {
 
-        // let mut corner1 = Vec2::new(particles[0].x,particles[0].y);
-        // let mut corner2 = Vec2::new(particles[0].x,particles[0].y);
+        let mut corner1: Vec2;
+        let mut corner2: Vec2;
+        if phys_object.is_empty() {
+            corner1 = Vec2::new(0., 0.);
+            corner2 = Vec2::new(0., 0.);
+        }else {
+            corner1 = Vec2::new(meter(phys_object.get_mut(0).unwrap().get_render_shape().get_pos().x), meter(phys_object.get_mut(0).unwrap().get_render_shape().get_pos().y));
+            corner2 = Vec2::new(meter(phys_object.get_mut(0).unwrap().get_render_shape().get_pos().x), meter(phys_object.get_mut(0).unwrap().get_render_shape().get_pos().y));
+        }
+
 
         clear_background(Color::from_rgba(30, 30, 30, 255));
         // set camera and produce the next frame
         set_camera(&camera);
 
-        // for p in &particles {
-        //     if p.x < corner1.x { corner1.x = p.x; }
-        //     if p.y < corner1.y { corner1.y = p.y; }
-        //     if p.x > corner2.x { corner2.x = p.x; }
-        //     if p.y > corner2.y { corner2.y = p.y; }
-        // }
+        for i in &mut phys_object {
+            let p = i.get_render_shape().get_pos().clone();
+            if meter(p.x) < corner1.x { corner1.x = meter(p.x); }
+            if meter(p.y) < corner1.y { corner1.y = meter(p.y); }
+            if meter(p.x) > corner2.x { corner2.x = meter(p.x); }
+            if meter(p.y) > corner2.y { corner2.y = meter(p.y); }
+        }
 
-        // let w = (corner2.x - corner1.x).abs();
-        // let h = (corner2.y - corner1.y).abs();
-        //
-        // boundary.x = corner1.x + w/2.;
-        // boundary.y = corner2.y - h/2.;
-        // boundary.w = w/2.;
-        // boundary.h = h/2.;
+        let w = (corner2.x - corner1.x).abs();
+        let h = (corner2.y - corner1.y).abs();
 
-        // let mut qtree = QuadTree::new(boundary, 4);
-        //
-        // for p in 0..particles.len() {
-        //     particles[p].highlight = false;
-        //     qtree.insert(Point::new(particles[p].x, particles[p].y, p));
-        // }
-        //
-        // for p in 0..particles.len() {
-        //     let others = qtree.query(&Rect::new(particles[p].x, particles[p].y,
-        //                                         particles[p].r*2., particles[p].r*2.));
-        //     for o in 0..others.len() {
-        //         if p != others[o].index {
-        //             if particles[p].intersects(&particles[others[o].index]) {
-        //                 particles[p].highlight = true;
-        //                 particles[others[o].index].highlight = true;
-        //             }
-        //         }
-        //     }
-        // }
+        boundary.x = corner1.x + w/2.;
+        boundary.y = corner2.y - h/2.;
+        boundary.w = w/2.;
+        boundary.h = h/2.;
 
-        // for i in &mut particles {
-        //     i.move_process();
-        //     i.render();
-        // }
+        let mut qtree = QuadTree::new(boundary, 4);
 
-        //qtree.show();
+        for p in 0..phys_object.len() {
+            qtree.insert(Point::new(meter(phys_object[p].get_render_shape().get_pos().x), meter(phys_object[p].get_render_shape().get_pos().y), p));
+        }
+
+        qtree.show();
 
         //Create the list of objects to render
         let mut render: Vec<Box<dyn Render + 'static>> = Vec::new();
@@ -188,17 +170,18 @@ fn conf() -> Conf {
             }
         }
         //Physics function for all physics objects
-        for (index, i) in &mut phys_object.iter_mut().enumerate() {
-            render.push(i.get_render_shape());
+        for index in 0..phys_object.len() {
+            render.push(phys_object.get_mut(index).unwrap().get_render_shape());
             if pauorpla {
-                i.physics_process(&camera);
+                phys_object.get_mut(index).unwrap().physics_process(&camera);
             }
             if is_mouse_button_down(MouseButton::Left) && matches!(mouse_mode, MouseMode::Drag) &&
                 ((mouse_position().0 < screen_width() - 400.) || selected_object_index.is_none())
-                && i.get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position())))
+                && phys_object.get_mut(index).unwrap().get_render_shape_reference().mouse_in_area(camera.screen_to_world(Vec2::from(mouse_position())))
                 && last_mouse_drag_pos.is_none() {
                     //Select the object the player has clicked on
                     selected_object_index = Some(index);
+                    before_phys_type = Some(phys_object.get_mut(index).unwrap().get_physics_type().clone());
                     ui_id = "".into();
             }
         }
