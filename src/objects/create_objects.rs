@@ -143,7 +143,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
     match mouse_mode {
         //The user is drawing a square
         MouseMode::DrawSquare => {
-            if is_mouse_button_down(MouseButton::Left) && mouse_position().1 < 100. {
+            if is_mouse_button_down(MouseButton::Left) && mouse_position().1 > 40. {
                 //Get the current mouse position, or save the first mouse position the usr has used
                 let pos2 = camera.screen_to_world(Vec2::from(mouse_position()));
                 if let Some(pos1) = *first_mouse_pos {
@@ -156,7 +156,7 @@ pub fn draw_process(mouse_mode: MouseMode, first_mouse_pos: &mut Option<Vec2>, c
                 }
             } else {
                 //Return true, as to signify that the user needs to make the mouse object, or clear the saved position
-                if let Some(_pos1) = *first_mouse_pos && mouse_position().1 < 100. {
+                if let Some(_pos1) = *first_mouse_pos && mouse_position().1 > 40. {
                     return true;
                 }
                 *first_mouse_pos = None;

@@ -6,7 +6,8 @@ pub(crate) mod shapes;
 pub(crate) mod physics;
 pub(crate) mod create_objects;
 use physics::{Material, PhysicsType};
-use crate::measurements::{dt};
+use crate::measurements::{dt, Point, QuadTree};
+use crate::objects::physics::PhysicsObject;
 
 //Give all the functions for shapes that can be rendered (this will be used for everything related to shapes)
 #[allow(dead_code)]
@@ -24,6 +25,7 @@ pub(crate) trait Render {
     fn set_measurements(&mut self, measurements: (f32, f32));
     fn get_outline_colour(&self) -> &Color;
     fn set_outline_colour(&mut self, colour: Color);
+    fn detect_near_object(&mut self, qtree: &mut QuadTree) -> Vec<Point>;
 }
 
 //Create the object struct

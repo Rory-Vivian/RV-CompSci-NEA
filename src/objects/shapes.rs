@@ -1,8 +1,9 @@
-use crate::measurements::{meter};
+use crate::measurements::{meter, Point, Rect};
 use crate::objects::*;
 use macroquad::color::Color;
 use macroquad::prelude::*;
 use std::f32::consts::*;
+use std::os::unix::raw::uid_t;
 
 //Struct for a Square
 #[derive(Clone)]
@@ -103,6 +104,11 @@ impl Render for Square {
     fn set_measurements(&mut self, measurements: (f32, f32)) { self.size = measurements.0; }
     fn get_outline_colour(&self) -> &Color { &self.outline_colour }
     fn set_outline_colour(&mut self, colour: Color) { self.outline_colour = colour; }
+    fn detect_near_object(&mut self, qtree: &mut QuadTree) -> Vec<Point> {
+        let items: Vec<Point> = qtree.query(&Rect::new(self.pos.x - self.size, self.pos.y - self.size,
+                                                       self.pos.x + self.size, self.pos.y + self.size));
+        items
+    }
 }
 
 //Implementing Render for Rectangle
@@ -125,7 +131,7 @@ impl Render for Rectangle {
             self.outline_colour,
         );
     }
-    //Getter for the area, position, a clone of self, the drag co-efficient, and the colour
+    //Getter for the area, position, a clone of self, the drag coefficient, and the colour
     fn get_area(&self) -> f32 {
         self.width * self.length
     }
@@ -165,6 +171,19 @@ impl Render for Rectangle {
     }
     fn get_outline_colour(&self) -> &Color { &self.outline_colour }
     fn set_outline_colour(&mut self, colour: Color) { self.outline_colour = colour; }
+    fn detect_near_object(&mut self, qtree: &mut QuadTree) -> Vec<Point> {
+        let using_pos = Vec2::new(meter(self.pos.x), meter(self.pos.y));
+
+        let boundary = Rect::new(using_pos.x + meter(self.width)/2., using_pos.y + meter(self.length)/2.,
+                                 meter(self.width)/2., meter(self.length)/2.);
+
+        draw_rectangle_lines(boundary.x - boundary.w, boundary.y - boundary.h,
+                             boundary.w *2., boundary.h *2., 1., RED);
+
+        let items: Vec<Point> = qtree.query(&boundary);
+        items
+    }
+
 }
 //Implement Render for circle
 impl Render for Circle {
@@ -219,5 +238,18 @@ impl Render for Circle {
     fn get_outline_colour(&self) -> &Color { &self.outline_colour }
     fn set_outline_colour(&mut self, colour: Color) {
         self.outline_colour = colour;
+    }
+
+    fn detect_near_object(&mut self, qtree: &mut QuadTree) -> Vec<Point> {
+        let using_pos = Vec2::new(meter(self.pos.x), meter(self.pos.y));
+
+        let boundary = Rect::new(using_pos.x + meter(self.radius)*2., using_pos.y + meter(self.radius)*2.,
+                                 meter(self.radius) * 4., meter(self.radius) * 4.);
+
+        draw_rectangle_lines(boundary.x - boundary.w, boundary.y - boundary.h,
+                             boundary.w, boundary.h, 1., RED);
+
+        let items: Vec<Point> = qtree.query(&boundary);
+        items
     }
 }

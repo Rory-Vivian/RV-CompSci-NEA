@@ -121,8 +121,6 @@ fn conf() -> Conf {
             qtree.insert(Point::new(meter(phys_object[p].get_render_shape().get_pos().x), meter(phys_object[p].get_render_shape().get_pos().y), p));
         }
 
-        qtree.show();
-
         //Create the list of objects to render
         let mut render: Vec<Box<dyn Render + 'static>> = Vec::new();
 
@@ -185,7 +183,18 @@ fn conf() -> Conf {
                     ui_id = "".into();
             }
         }
-        // Finding if an object needs to be deleted, and then removing it from the nesasary places
+
+        for i in 0..phys_object.len() {
+            phys_object.swap(0, i);
+
+            let (item, others) = phys_object.split_first_mut().unwrap();
+
+            let others_vec: Vec<&mut Box<dyn PhysicsObject>> = others.iter_mut().collect();
+
+            item.detect_near_object(&mut qtree, others_vec);
+
+            phys_object.swap(0, i);
+        }
 
         //Allow the user to unselect any objects they have selected
         if is_key_pressed(KeyCode::Escape) { selected_object_index = None; }
@@ -206,6 +215,8 @@ fn conf() -> Conf {
                 phys_object.pop();
             }
         }
+
+        qtree.show();
 
         //Change the level of the cameras zoom
         camera.zoom = Vec2::new(
