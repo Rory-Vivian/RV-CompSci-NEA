@@ -3,7 +3,7 @@ use crate::objects::*;
 use macroquad::color::Color;
 use macroquad::prelude::*;
 use std::f32::consts::*;
-use std::os::unix::raw::uid_t;
+//use std::os::unix::raw::uid_t;
 
 //Struct for a Square
 #[derive(Clone)]
@@ -174,12 +174,11 @@ impl Render for Rectangle {
     fn detect_near_object(&mut self, qtree: &mut QuadTree) -> Vec<Point> {
         let using_pos = Vec2::new(meter(self.pos.x), meter(self.pos.y));
 
-        let boundary = Rect::new(using_pos.x + meter(self.width)/2., using_pos.y + meter(self.length)/2.,
-                                 meter(self.width)/2., meter(self.length)/2.);
+        let dimension = self.width.max(self.length);
 
-        draw_rectangle_lines(boundary.x - boundary.w, boundary.y - boundary.h,
-                             boundary.w *2., boundary.h *2., 1., RED);
-
+        let boundary = Rect::new(using_pos.x + (meter(self.width)/2.), using_pos.y + (meter(self.length)/2.),
+                                 meter(dimension), meter(dimension));
+        
         let items: Vec<Point> = qtree.query(&boundary);
         items
     }
@@ -245,9 +244,6 @@ impl Render for Circle {
 
         let boundary = Rect::new(using_pos.x + meter(self.radius)*2., using_pos.y + meter(self.radius)*2.,
                                  meter(self.radius) * 4., meter(self.radius) * 4.);
-
-        draw_rectangle_lines(boundary.x - boundary.w, boundary.y - boundary.h,
-                             boundary.w, boundary.h, 1., RED);
 
         let items: Vec<Point> = qtree.query(&boundary);
         items

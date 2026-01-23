@@ -184,16 +184,21 @@ fn conf() -> Conf {
             }
         }
 
-        for i in 0..phys_object.len() {
-            phys_object.swap(0, i);
+        let len = phys_object.len();
 
-            let (item, others) = phys_object.split_first_mut().unwrap();
+        for i in 0..len {
+            {
+                let (left, right_side) = phys_object.split_at_mut(i);
 
-            let others_vec: Vec<&mut Box<dyn PhysicsObject>> = others.iter_mut().collect();
+                let (item, right) = right_side.split_first_mut().expect("Index out of bounds");
 
-            item.detect_near_object(&mut qtree, others_vec);
+                // 3. Build the references to every OTHER object
+                let mut others_vec: Vec<&mut Box<dyn PhysicsObject>> = Vec::with_capacity(len - 1);
+                others_vec.extend(left.iter_mut());
+                others_vec.extend(right.iter_mut());
 
-            phys_object.swap(0, i);
+                item.detect_near_object(&mut qtree, others_vec);
+            }
         }
 
         //Allow the user to unselect any objects they have selected
@@ -215,8 +220,6 @@ fn conf() -> Conf {
                 phys_object.pop();
             }
         }
-
-        qtree.show();
 
         //Change the level of the cameras zoom
         camera.zoom = Vec2::new(

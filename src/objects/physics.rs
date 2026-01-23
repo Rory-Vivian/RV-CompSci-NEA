@@ -1,9 +1,8 @@
 use macroquad::camera::Camera2D;
-use macroquad::color::GREEN;
-use crate::measurements::{dt, Point, QuadTree, Rect};
+use macroquad::color::{GREEN};
+use crate::measurements::{dt, QuadTree};
 use crate::objects::{Object, Render};
 use macroquad::math::Vec2;
-use crate::objects::shapes::Square;
 
 //Create the PhysicsType enum
 #[derive(Clone, Copy)]
@@ -132,6 +131,7 @@ impl<T: Render + Clone + 'static> PhysicsObject for Object<T> {
     fn detect_near_object(&mut self, mut qtree: &mut QuadTree, mut objects: Vec<&mut Box<dyn PhysicsObject>>) {
         let points = self.get_render_shape_reference().detect_near_object(&mut qtree);
         for i in points {
+
             if objects.get_mut(i.index).is_some() {
                 self.check_collisions(objects.get_mut(i.index).unwrap());
             };
@@ -152,14 +152,15 @@ impl<T: Render + Clone + 'static> PhysicsObject for Object<T> {
 
         if object.get_render_shape_reference().get_id() == "Rectangle" && self.get_render_shape().get_id() == object.get_render_shape().get_id() {
             let mut overlap = true;
-            let pos = self.get_render_shape_reference().get_pos().clone();
             let pos_other = object.get_render_shape().get_pos().clone();
-            if pos.x > pos_other.x + object.get_render_shape_reference().get_measurements().0 || pos_other.x > pos.x + self.get_render_shape_reference().get_measurements().0 {
-                overlap = false;
-            }
-            if pos.y > pos_other.y + object.get_render_shape().get_measurements().1 || pos_other.y > pos.y + self.get_render_shape_reference().get_measurements().1 {
-                overlap = false;
-            }
+            let pos = get_closest_point(pos_other, self.get_render_shape().get_pos().clone(),
+                                        Vec2::new(self.get_render_shape().get_pos().x + self.get_render_shape().get_measurements().0,
+                                                  self.get_render_shape().get_pos().y + self.get_render_shape().get_measurements().1));
+
+            if pos_other.x > pos.x { overlap = false; };
+            if pos_other.y > pos.y { overlap = false; };
+            if pos_other.x + object.get_render_shape().get_measurements().0 < pos.x { overlap = false; };
+            if pos_other.y + object.get_render_shape().get_measurements().1 < pos.y { overlap = false; };
 
             if overlap {
                 self.get_render_shape_reference().set_colour(GREEN);
@@ -168,56 +169,72 @@ impl<T: Render + Clone + 'static> PhysicsObject for Object<T> {
             return;
         }
 
-        let mut overlap = false;
+
         if self.get_render_shape_reference().get_id() == "Circle" && object.get_render_shape_reference().get_id() == "Rectangle" {
-            let mut closest = object.get_render_shape_reference().get_pos().clone();
-            let v2 = Vec2::new(object.get_render_shape_reference().get_pos().x + object.get_render_shape_reference().get_measurements().0, object.get_render_shape_reference().get_pos().y);
-            let v3 = Vec2::new(object.get_render_shape_reference().get_pos().x, object.get_render_shape_reference().get_pos().y + object.get_render_shape_reference().get_measurements().1);
-            let v4 = Vec2::new(object.get_render_shape_reference().get_pos().x + object.get_render_shape_reference().get_measurements().0, object.get_render_shape_reference().get_pos().y + object.get_render_shape_reference().get_measurements().1);
+            let closest_point = get_closest_point(self.get_render_shape().get_pos().clone(),
+                                                  object.get_render_shape().get_pos().clone(),
+                                                  Vec2::new(object.get_render_shape().get_pos().x + object.get_render_shape().get_measurements().0,
+                                                            object.get_render_shape().get_pos().y + object.get_render_shape().get_measurements().1));
 
-            if self.get_render_shape_reference().get_pos().distance(closest) >
-                self.get_render_shape_reference().get_pos().distance(v2) {
-                closest = v2;
-            }
-            if self.get_render_shape_reference().get_pos().distance(closest) >
-                self.get_render_shape_reference().get_pos().distance(v3) {
-                closest = v3;
-            }
-            if self.get_render_shape_reference().get_pos().distance(closest) >
-                self.get_render_shape_reference().get_pos().distance(v4) {
-                closest = v4;
-            }
+            let target = self.get_render_shape().get_pos().clone();
+            let overlap = target.distance(closest_point) < self.get_render_shape_reference().get_measurements().0;
 
-            let overlap = self.get_render_shape_reference().get_pos().distance(closest) < self.get_render_shape_reference().get_measurements().0;
             if overlap {
                 self.get_render_shape_reference().set_colour(GREEN);
                 object.get_render_shape_reference().set_colour(GREEN);
             }
+        }
 
-        } else if self.get_render_shape_reference().get_id() == "Rectangle" && object.get_render_shape_reference().get_id() == "Circle" {
-            let mut closest = self.get_render_shape_reference().get_pos().clone();
-            let v2 = Vec2::new(self.get_render_shape_reference().get_pos().x + self.get_render_shape_reference().get_measurements().0, self.get_render_shape_reference().get_pos().y);
-            let v3 = Vec2::new(self.get_render_shape_reference().get_pos().x, self.get_render_shape_reference().get_pos().y + self.get_render_shape_reference().get_measurements().1);
-            let v4 = Vec2::new(self.get_render_shape_reference().get_pos().x + self.get_render_shape_reference().get_measurements().0, self.get_render_shape_reference().get_pos().y + self.get_render_shape_reference().get_measurements().1);
+        if self.get_render_shape_reference().get_id() == "Rectangle" && object.get_render_shape_reference().get_id() == "Circle" {
 
-            if object.get_render_shape_reference().get_pos().distance(closest) >
-                object.get_render_shape_reference().get_pos().distance(v2) {
-                closest = v2;
-            }
-            if object.get_render_shape_reference().get_pos().distance(closest) >
-                object.get_render_shape_reference().get_pos().distance(v3) {
-                closest = v3;
-            }
-            if object.get_render_shape_reference().get_pos().distance(closest) >
-                object.get_render_shape_reference().get_pos().distance(v4) {
-                closest = v4;
-            }
+            //Check Vertices
+            let closest_point = get_closest_point(object.get_render_shape().get_pos().clone(),
+                                                  self.get_render_shape().get_pos().clone(),
+                                                  Vec2::new(self.get_render_shape().get_pos().x + self.get_render_shape().get_measurements().0,
+                                                            self.get_render_shape().get_pos().y + self.get_render_shape().get_measurements().1));
 
-            let overlap = object.get_render_shape_reference().get_pos().distance(closest) < object.get_render_shape_reference().get_measurements().0;
+            let target = object.get_render_shape().get_pos().clone();
+            let overlap = target.distance(closest_point) < object.get_render_shape_reference().get_measurements().0;
             if overlap {
                 self.get_render_shape_reference().set_colour(GREEN);
                 object.get_render_shape_reference().set_colour(GREEN);
             }
         }
     }
+}
+
+#[allow(unused, non_snake_case)]
+fn get_closest_point(target: Vec2, corner1: Vec2, corner2: Vec2) -> Vec2 {
+    let mut closest_point = corner1;
+
+    let pointa = corner1.x; let pointb = corner1.y;
+    let pointA = corner2.x; let pointB = corner2.y;
+
+    if target.x > pointA && target.y > pointB { closest_point = Vec2::new(pointA, pointB); }
+    else if target.x > pointA && target.y < pointb { closest_point = Vec2::new(pointA, pointb); }
+    else if target.x < pointa && target.y < pointb { closest_point = Vec2::new(pointa, pointb); }
+    else if target.x < pointa && target.y > pointB { closest_point = Vec2::new(pointa, pointB); }
+    else {
+        if target.y < pointB && target.y > pointb {
+            //One of the sizes
+            if target.x < pointa {
+                //Left size
+                closest_point = Vec2::new(pointa, target.y);
+            }else {
+                closest_point = Vec2::new(pointA, target.y);
+            }
+        }else {
+            //One of the top/bottom
+            if target.y < pointb {
+                //Top of the box
+                closest_point = Vec2::new(target.x, pointb);
+            }else {
+                //Bottom of the box
+                closest_point = Vec2::new(target.x , pointB);
+            }
+        }
+
+    }
+
+    closest_point
 }

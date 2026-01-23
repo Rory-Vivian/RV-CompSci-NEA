@@ -7,7 +7,6 @@ pub(crate) mod physics;
 pub(crate) mod create_objects;
 use physics::{Material, PhysicsType};
 use crate::measurements::{dt, Point, QuadTree};
-use crate::objects::physics::PhysicsObject;
 
 //Give all the functions for shapes that can be rendered (this will be used for everything related to shapes)
 #[allow(dead_code)]
