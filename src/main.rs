@@ -186,6 +186,10 @@ fn conf() -> Conf {
 
         let len = phys_object.len();
 
+        for i in &mut phys_object {
+            i.get_render_shape_reference().set_colour(WHITE);
+        }
+
         for i in 0..len {
             {
                 let (left, right_side) = phys_object.split_at_mut(i);
