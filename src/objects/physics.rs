@@ -1,8 +1,10 @@
+use std::ops::Add;
 use macroquad::camera::Camera2D;
-use macroquad::color::{GREEN};
-use crate::measurements::{dt, QuadTree};
+use macroquad::color::{GREEN, RED};
+use crate::measurements::{dt, meter, QuadTree};
 use crate::objects::{Object, Render};
-use macroquad::math::Vec2;
+use macroquad::math::{Vec2, Rect};
+use macroquad::shapes::draw_circle_lines;
 
 //Create the PhysicsType enum
 #[derive(Clone, Copy)]
@@ -150,22 +152,24 @@ impl<T: Render + Clone + 'static> PhysicsObject for Object<T> {
         }
 
         if object.get_render_shape_reference().get_id() == "Rectangle" && self.get_render_shape().get_id() == object.get_render_shape().get_id() {
-            let mut overlap = true;
-            let pos_other = object.get_render_shape().get_pos().clone();
-            let pos = get_closest_point(pos_other, self.get_render_shape().get_pos().clone(),
-                                        Vec2::new(self.get_render_shape().get_pos().x + self.get_render_shape().get_measurements().0,
-                                                  self.get_render_shape().get_pos().y + self.get_render_shape().get_measurements().1));
+            let mut overlap = false;
 
-            if pos_other.x > pos.x { overlap = false; };
-            if pos_other.y > pos.y { overlap = false; };
-            if pos_other.x + object.get_render_shape().get_measurements().0 < pos.x { overlap = false; };
-            if pos_other.y + object.get_render_shape().get_measurements().1 < pos.y { overlap = false; };
+            let l1 = self.get_render_shape().get_pos().clone();
+            let l2 = object.get_render_shape().get_pos().clone();
+
+            let r1 = Rect::new(l1.x, l1.y, self.get_render_shape().get_measurements().0, self.get_render_shape().get_measurements().1);
+            let r2 = Rect::new(l2.x, l2.y, object.get_render_shape().get_measurements().0, object.get_render_shape().get_measurements().1);
+
+            if r1.intersect(r2).is_some() || r2.intersect(r1).is_some() {
+                overlap = true;
+            }
 
             if overlap {
                 self.get_render_shape_reference().set_colour(GREEN);
                 object.get_render_shape_reference().set_colour(GREEN);
+
+                resolve_overlap_rect(self, object);
             }
-            return;
         }
 
 
@@ -181,6 +185,11 @@ impl<T: Render + Clone + 'static> PhysicsObject for Object<T> {
             if overlap {
                 self.get_render_shape_reference().set_colour(GREEN);
                 object.get_render_shape_reference().set_colour(GREEN);
+
+                let mut circle_type = self.get_physics_type().clone();
+                let mut rect_type = object.get_physics_type().clone();
+
+                resolve_overlap_cirect(self.get_render_shape_reference(), object.get_render_shape_reference(), &mut circle_type, &mut rect_type);
             }
         }
 
@@ -197,45 +206,30 @@ impl<T: Render + Clone + 'static> PhysicsObject for Object<T> {
             if overlap {
                 self.get_render_shape_reference().set_colour(GREEN);
                 object.get_render_shape_reference().set_colour(GREEN);
+
+                let mut circle_type = object.get_physics_type().clone();
+                let mut rect_type = self.get_physics_type().clone();
+
+                resolve_overlap_cirect(object.get_render_shape_reference(), self.get_render_shape_reference(), &mut circle_type, &mut rect_type);
             }
         }
     }
 }
 
-#[allow(unused, non_snake_case)]
 fn get_closest_point(target: Vec2, corner1: Vec2, corner2: Vec2) -> Vec2 {
     let mut closest_point = corner1;
 
-    let pointa = corner1.x; let pointb = corner1.y;
-    let pointA = corner2.x; let pointB = corner2.y;
+    let min_x = corner1.x.min(corner2.x);
+    let max_x = corner1.x.max(corner2.x);
+    let min_y = corner1.y.min(corner2.y);
+    let max_y = corner1.y.max(corner2.y);
 
-    if target.x > pointA && target.y > pointB { closest_point = Vec2::new(pointA, pointB); }
-    else if target.x > pointA && target.y < pointb { closest_point = Vec2::new(pointA, pointb); }
-    else if target.x < pointa && target.y < pointb { closest_point = Vec2::new(pointa, pointb); }
-    else if target.x < pointa && target.y > pointB { closest_point = Vec2::new(pointa, pointB); }
-    else {
-        if target.y < pointB && target.y > pointb {
-            //One of the sizes
-            if target.x < pointa {
-                //Left size
-                closest_point = Vec2::new(pointa, target.y);
-            }else {
-                closest_point = Vec2::new(pointA, target.y);
-            }
-        }else {
-            //One of the top/bottom
-            if target.y < pointb {
-                //Top of the box
-                closest_point = Vec2::new(target.x, pointb);
-            }else {
-                //Bottom of the box
-                closest_point = Vec2::new(target.x , pointB);
-            }
-        }
+    let true_x = target.x.clamp(min_x, max_x);
+    let true_y = target.y.clamp(min_y, max_y);
 
-    }
+    draw_circle_lines(meter(true_x), meter(true_y), 1.,1., RED);
 
-    closest_point
+    Vec2::new(true_x, true_y)
 }
 
 fn resolve_overlap_circles(object_1: &mut dyn PhysicsObject, object_2: &mut Box<dyn PhysicsObject>) {
@@ -272,26 +266,86 @@ fn resolve_overlap_circles(object_1: &mut dyn PhysicsObject, object_2: &mut Box<
 }
 
 fn resolve_overlap_rect(object_1: &mut dyn PhysicsObject, object_2: &mut Box<dyn PhysicsObject>) {
+    // 1. Fix: Get pos2 from object_2, not object_1!
     let pos1 = object_1.get_render_shape().get_pos().clone();
-    let pos2 = object_1.get_render_shape().get_pos().clone();
-    let overlap = Vec2::new((pos1.x + object_1.get_render_shape().get_measurements().0).min(pos2.x + object_2.get_render_shape().get_measurements().0) - pos1.x.max(pos2.x),
-                            (pos1.y + object_1.get_render_shape().get_measurements().1).min(pos2.y + object_2.get_render_shape().get_measurements().1) - pos1.y.max(pos2.y));
+    let pos2 = object_2.get_render_shape().get_pos().clone(); // Fixed this line
 
-    if overlap.x > overlap.y {
-        if pos1.x < pos2.x {
-            object_1.get_render_shape_reference().get_pos().x -= overlap.x/2.;
-            object_2.get_render_shape_reference().get_pos().x += overlap.x/2.;
-        }else {
-            object_1.get_render_shape_reference().get_pos().x += overlap.x/2.;
-            object_2.get_render_shape_reference().get_pos().x -= overlap.x/2.;
-        }
-    }else {
-        if pos1.y < pos2.y {
-            object_1.get_render_shape_reference().get_pos().y -= overlap.y/2.;
-            object_2.get_render_shape_reference().get_pos().y += overlap.y/2.;
-        }else {
-            object_1.get_render_shape_reference().get_pos().y += overlap.y/2.;
-            object_2.get_render_shape_reference().get_pos().y -= overlap.y/2.;
+    let m1 = object_1.get_render_shape().get_measurements();
+    let m2 = object_2.get_render_shape().get_measurements();
+
+    // Calculate actual overlap
+    let overlap_x = (pos1.x + m1.0).min(pos2.x + m2.0) - pos1.x.max(pos2.x);
+    let overlap_y = (pos1.y + m1.1).min(pos2.y + m2.1) - pos1.y.max(pos2.y);
+
+    let mut object1_overlap = Vec2::new(overlap_x/2., overlap_y/2.);
+    let mut object2_overlap = Vec2::new(overlap_x/2., overlap_y/2.);
+
+    if matches!(object_1.get_physics_type(), PhysicsType::Static) {
+        object1_overlap = Vec2::new(0., 0.);
+        object2_overlap = Vec2::new(object2_overlap.x *2. , object2_overlap.y *2.);
+    }
+    if matches!(object_2.get_physics_type(), PhysicsType::Static) {
+        object2_overlap = Vec2::new(0., 0.);
+        object1_overlap = Vec2::new(object1_overlap.x *2. , object1_overlap.y *2.);
+    }
+
+    // 2. Fix: Only resolve if there is a real overlap (both > 0)
+    if overlap_x > 0.0 && overlap_y > 0.0 {
+
+        // 3. Fix: Resolve the SHORTEST distance (Minimum Separation Vector)
+        if overlap_x < overlap_y {
+            // Resolve on X Axis
+            if pos1.x < pos2.x {
+                object_1.get_render_shape_reference().get_pos().x -= object1_overlap.x;
+                object_2.get_render_shape_reference().get_pos().x += object2_overlap.x;
+            } else {
+                object_1.get_render_shape_reference().get_pos().x += object1_overlap.x;
+                object_2.get_render_shape_reference().get_pos().x -= object2_overlap.x;
+            }
+        } else {
+            // Resolve on Y Axis
+            if pos1.y < pos2.y {
+                object_1.get_render_shape_reference().get_pos().y -= object1_overlap.y;
+                object_2.get_render_shape_reference().get_pos().y += object2_overlap.y;
+            } else {
+                object_1.get_render_shape_reference().get_pos().y += object1_overlap.y;
+                object_2.get_render_shape_reference().get_pos().y -= object2_overlap.y;
+            }
         }
     }
+}
+
+fn resolve_overlap_cirect(mut cirlce: Box<&mut dyn Render>, mut rect: Box<&mut dyn Render>, circle_type: &mut PhysicsType, rect_type: &mut PhysicsType) {
+    let target = cirlce.get_pos().clone();
+    let l1 = rect.get_pos().clone();
+    let l2 = Vec2::new(rect.get_pos().x + rect.get_measurements().0, rect.get_pos().y + rect.get_measurements().1);
+    let closest_point = get_closest_point(target, l1, l2);
+
+    let dist_x = cirlce.get_pos().x - closest_point.x;
+    let dist_y = cirlce.get_pos().y - closest_point.y;
+
+    let radius = cirlce.get_measurements().0.clone();
+    let dist = (dist_x*dist_x + dist_y*dist_y).sqrt();
+    let overlap = radius - dist;
+
+    if dist == 0.0 { return; }
+    if dist.powf(2.) >= radius * radius { return; }
+
+    let nx = dist_x/dist.sqrt();
+    let ny = dist_y/dist;
+
+    let mut move_circle = Vec2::new(nx * overlap/2., ny * overlap/2.);
+    let mut move_rect = Vec2::new(nx * overlap/2., ny * overlap/2.);
+
+    if matches!(circle_type, PhysicsType::Static) {
+        move_circle = Vec2::new(0., 0.);
+        move_rect = Vec2::new(move_rect.x * 2., move_rect.y * 2.);
+    }
+    if matches!(rect_type, PhysicsType::Static) {
+        move_rect = Vec2::new(0., 0.);
+        move_circle = Vec2::new(move_circle.x * 2., move_circle.y * 2.);
+    }
+
+    cirlce.get_pos().x += move_circle.x; cirlce.get_pos().y += move_circle.y;
+    rect.get_pos().x -= move_rect.x; rect.get_pos().y -= move_rect.y;
 }
